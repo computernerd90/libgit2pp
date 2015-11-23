@@ -96,21 +96,21 @@ Reference Reference::resolve() const
 Reference Reference::setSymbolicTarget(const std::string& target)
 {
 	git_reference *out;
-    Exception::git2_assert(git_reference_symbolic_set_target(&out, data(), target.c_str()));
+    Exception::git2_assert(git_reference_symbolic_set_target(&out, data(), target.c_str(), ""));
     return Reference(out);
 }
 
 void Reference::setTarget(const OId& oid)
 {
 	git_reference *ref;
-    Exception::git2_assert(git_reference_set_target(&ref, data(), oid.constData()));
+    Exception::git2_assert(git_reference_set_target(&ref, data(), oid.constData(), ""));
     *this = Reference(ref);
 }
 
 void Reference::rename(const std::string name, bool force)
 {
 	git_reference *ref;
-	Exception::git2_assert(git_reference_rename(&ref, data(), name.c_str(), force?1:0));
+	Exception::git2_assert(git_reference_rename(&ref, data(), name.c_str(), force?1:0, ""));
     *this = Reference(ref);
 }
 
@@ -118,23 +118,6 @@ void Reference::deleteReference()
 {
 	Exception::git2_assert(git_reference_delete(data()));
     *this = Reference();
-}
-
-RefLog Reference::readRefLog()
-{
-	git_reflog *reflog;
-	Exception::git2_assert(git_reflog_read(&reflog, data()));
-	return RefLog(reflog);
-}
-
-void Reference::renameRefLog(const std::string name)
-{
-	Exception::git2_assert(git_reflog_rename(data(), name.c_str()));
-}
-
-void Reference::deleteRefLog()
-{
-	Exception::git2_assert(git_reflog_delete(data()));
 }
 
 bool Reference::isNull() const

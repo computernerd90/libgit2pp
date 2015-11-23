@@ -2,17 +2,17 @@
 /*
  * libgit2pp
  * Copyright (C) 2013-2014 Émilien Kia <emilien.kia@gmail.com>
- * 
+ *
  * libgit2pp is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * libgit2pp is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
@@ -23,11 +23,12 @@
 #include <git2.h>
 #include <git2/trace.h>
 
+#include <functional>
 #include <memory>
 
 namespace git2
 {
-	
+
 
 /**
  * @name Traces
@@ -35,20 +36,20 @@ namespace git2
  */
 
 typedef std::function<void(git_trace_level_t level, const std::string& msg)> TraceCallback;
- 
+
 /**
  * Sets the system tracing configuration to the specified level with the
  * specified callback.  When system events occur at a level equal to, or
  * lower than, the given level they will be reported to the given callback.
- * 
+ *
  * @param level Level to set tracing to
  * @param cb Function to call with trace data
  */
 void setTraceCallback(git_trace_level_t level, TraceCallback cb);
- 
+
 /** @} */
-	
-	
+
+
 namespace helper
 {
 
@@ -72,7 +73,7 @@ public:
 	_PtrType& ptr() const {return _ptr;}
 
 private:
-    _PtrType _ptr;
+	_PtrType _ptr;
 };
 
 /**
@@ -90,7 +91,7 @@ public:
 	{
 		fill();
 	}
-	
+
 	~StrArrayFiller()
 	{
 		free();
@@ -98,7 +99,7 @@ public:
 
 private:
 	StrArrayFiller(){}
-	
+
 	void fill()
 	{
 		_array->count   = _container.size();
@@ -109,7 +110,7 @@ private:
 			_array->strings[n++] = const_cast<char*>(val.c_str());
 		}
 	}
-	
+
 	void free()
 	{
 		if(_array->strings!=nullptr)
@@ -146,4 +147,3 @@ void push_back(StringContainer& container, const git_strarray* array)
 } // namespace git2
 
 #endif // _GIT2PP_COMMON_HPP_
-

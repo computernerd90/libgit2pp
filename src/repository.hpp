@@ -2,17 +2,17 @@
 /*
  * libgit2pp
  * Copyright (C) 2013-2014 Émilien Kia <emilien.kia@gmail.com>
- * 
+ *
  * libgit2pp is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * libgit2pp is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
@@ -71,65 +71,65 @@ typedef std::function<bool(size_t index, const std::string& message, OId stashId
 class Repository : public helper::Git2PtrWrapper<git_repository, git_repository_free>
 {
 public:
-    /**
-     * Default constructor.
-     * The created repository is not usable.
-     */
-    Repository();
+	/**
+	 * Default constructor.
+	 * The created repository is not usable.
+	 */
+	Repository();
 
-    /**
-     * Copy constructor; creates a copy of the object, sharing the same underlaying data
-     * structure.
-     */
-    Repository(const Repository& repo);
+	/**
+	 * Copy constructor; creates a copy of the object, sharing the same underlaying data
+	 * structure.
+	 */
+	Repository(const Repository& repo);
 
 /**
  * @name Creation
  * @{
  */
 
-    /**
-     * Look for a git repository and return its path. The lookup start from startPath and
-     * walk across parent directories if nothing has been found. The lookup ends when the
-     * first repository is found, or when reaching a directory that is referenced in
-     * ceilingDirs, or when the filesystem changes (unless acrossFs is true).
-     *
-     * The method will automatically detect if the repository is bare (if there is a
-     * repository).
-     *
-     * The function will only return successfully if a repository was found, otherwise an
-     * exception is thrown, providing an error message.
-     *
-     * @param startPath
-     * The base path where the lookup starts.
-     *
-     * @param acrossFs
-     * If true, then the lookup will not stop when a filesystem device change is detected
-     * while exploring parent directories.
-     *
-     * @param ceilingDirs
-     * A list of absolute symbolic link free paths. The lookup will stop if any of these
-     * paths are reached. Note that the lookup always performs on startPath no matter if
-     * startPath appears in ceilingDirs.
-     *
-     * @return The path of the found repository
-     * @throws Exception
-     */
-    static std::string discover(const std::string& startPath,
-                            bool acrossFs = false,
-                            const std::list<std::string>& ceilingDirs = std::list<std::string>());
+	/**
+	 * Look for a git repository and return its path. The lookup start from startPath and
+	 * walk across parent directories if nothing has been found. The lookup ends when the
+	 * first repository is found, or when reaching a directory that is referenced in
+	 * ceilingDirs, or when the filesystem changes (unless acrossFs is true).
+	 *
+	 * The method will automatically detect if the repository is bare (if there is a
+	 * repository).
+	 *
+	 * The function will only return successfully if a repository was found, otherwise an
+	 * exception is thrown, providing an error message.
+	 *
+	 * @param startPath
+	 * The base path where the lookup starts.
+	 *
+	 * @param acrossFs
+	 * If true, then the lookup will not stop when a filesystem device change is detected
+	 * while exploring parent directories.
+	 *
+	 * @param ceilingDirs
+	 * A list of absolute symbolic link free paths. The lookup will stop if any of these
+	 * paths are reached. Note that the lookup always performs on startPath no matter if
+	 * startPath appears in ceilingDirs.
+	 *
+	 * @return The path of the found repository
+	 * @throws Exception
+	 */
+	static std::string discover(const std::string& startPath,
+							bool acrossFs = false,
+							const std::list<std::string>& ceilingDirs = std::list<std::string>());
 
-    /**
-     * Constructs a new Git repository in the given folder.
-     *
-     * @param path the path to the repository
-     * @param isBare if true, a Git repository without a working directory is created
-     * at the pointed path. If false, provided path will be considered as the working
-     * directory into which the .git directory will be created.
-     *
-     * @throws Exception
-     */
-    static Repository init(const std::string& path, bool isBare);
+	/**
+	 * Constructs a new Git repository in the given folder.
+	 *
+	 * @param path the path to the repository
+	 * @param isBare if true, a Git repository without a working directory is created
+	 * at the pointed path. If false, provided path will be considered as the working
+	 * directory into which the .git directory will be created.
+	 *
+	 * @throws Exception
+	 */
+	static Repository init(const std::string& path, bool isBare);
 
 	/**
 	 * Create a new Git repository in the given folder with extended controls.
@@ -138,7 +138,7 @@ public:
 	 * if requested by flags) and working directory as needed.  It will
 	 * auto-detect the case sensitivity of the file system and if the
 	 * file system supports file mode bits correctly.
-	 * 
+	 *
 	 * @param path The path to the repository.
 	 * @param flags - Combination of GIT_REPOSITORY_INIT flags above.
 	 * @param mode  - Set to one of the standard GIT_REPOSITORY_INIT_SHARED_...
@@ -172,126 +172,126 @@ public:
 		const std::string& originUrl);
 
 
-    /**
-     * Open a git repository.
-     *
-     * The 'path' argument must point to an existing git repository
-     * folder, e.g.
-     *
-     * /path/to/my_repo/.git/ (normal repository)
-     * objects/
-     * index
-     * HEAD
-     *
-     * /path/to/bare_repo/ (bare repository)
-     * objects/
-     * index
-     * HEAD
-     *
-     * The method will automatically detect if 'path' is a normal
-     * or bare repository or fail is 'path' is neither.
-     *
-     * @param path the path to the repository
-     * @throws Exception
-     */
-    static Repository open(const std::string& path);
+	/**
+	 * Open a git repository.
+	 *
+	 * The 'path' argument must point to an existing git repository
+	 * folder, e.g.
+	 *
+	 * /path/to/my_repo/.git/ (normal repository)
+	 * objects/
+	 * index
+	 * HEAD
+	 *
+	 * /path/to/bare_repo/ (bare repository)
+	 * objects/
+	 * index
+	 * HEAD
+	 *
+	 * The method will automatically detect if 'path' is a normal
+	 * or bare repository or fail is 'path' is neither.
+	 *
+	 * @param path the path to the repository
+	 * @throws Exception
+	 */
+	static Repository open(const std::string& path);
 
 	// TODO Implement git_repository_wrap_odb
 
-    /**
-     * Convenience function for finding and opening a git repository.
-     *
-     * Calls discover() with the given arguments, and passes the result to open().
-     *
-     * @throws Exception
-     */
-    static Repository discoverAndOpen(const std::string &startPath,
-                         bool acrossFs = false,
-                         const std::list<std::string> &ceilingDirs = std::list<std::string>());
+	/**
+	 * Convenience function for finding and opening a git repository.
+	 *
+	 * Calls discover() with the given arguments, and passes the result to open().
+	 *
+	 * @throws Exception
+	 */
+	static Repository discoverAndOpen(const std::string &startPath,
+						 bool acrossFs = false,
+						 const std::list<std::string> &ceilingDirs = std::list<std::string>());
 
 	// TODO Implement git_repository_open_ext
-	
+
 	/**
 	 * Open a bare repository on the serverside.
 	 *
 	 * This is a fast open for bare repositories that will come in handy
 	 * if you're e.g. hosting git repositories and need to access them
 	 * efficiently
-	 * 
+	 *
 	 * @param path Direct path to the bare repository
 	 */
 	static Repository openBare(const std::string& path);
 
 /** @} */
 
-    /**
-     * Retrieve and resolve the reference pointed at by HEAD.
-     *
-     * @throws Exception
-     */
-    Reference head() const;
+	/**
+	 * Retrieve and resolve the reference pointed at by HEAD.
+	 *
+	 * @throws Exception
+	 */
+	Reference head() const;
 
-    /**
-     * Check if a repository's HEAD is detached
-     *
-     * A repository's HEAD is detached when it points directly to a commit
-     * instead of a branch.
-     *
-     * @throws Exception
-     */
-    bool isHeadDetached() const;
+	/**
+	 * Check if a repository's HEAD is detached
+	 *
+	 * A repository's HEAD is detached when it points directly to a commit
+	 * instead of a branch.
+	 *
+	 * @throws Exception
+	 */
+	bool isHeadDetached() const;
 
-    /**
-     * Check if the current branch is an orphan
-     *
-     * An orphan branch is one named from HEAD but which doesn't exist in
-     * the refs namespace, because it doesn't have any commit to point to.
-     *
-     * @throws Exception
-     */
-    bool isHeadOrphan() const;
+	/**
+	 * Check if the current branch is unborn
+	 *
+	 * An unborn branch is one named from HEAD but which doesn't exist in
+	 * the refs namespace, because it doesn't have any commit to point to.
+	 *
+	 * @throws Exception
+	 */
+	bool isHeadUnborn() const;
 
-    /**
-     * Check if a repository is empty
-     *
-     * An empty repository has just been initialized and contains
-     * no commits.
-     *
-     * @throws Exception
-     */
-    bool isEmpty() const;
+	/**
+	 * Check if a repository is empty
+	 *
+	 * An empty repository has just been initialized and contains
+	 * no commits.
+	 *
+	 * @throws Exception
+	 */
+	bool isEmpty() const;
 
-    /**
-     * Check if a repository is bare
-     *
-     * @throws Exception
-     */
-    bool isBare() const;
+	/**
+	 * Check if a repository is bare
+	 *
+	 * @throws Exception
+	 */
+	bool isBare() const;
 
-    /**
-     * The name equals the repositories working directory name.
-     * In case of a bare repository, the name equals the repositorie's directory.
-     */
-    std::string name() const;
+	/**
+	 * The name equals the repositories working directory name.
+	 * In case of a bare repository, the name equals the repositorie's directory.
+	 */
+	std::string name() const;
 
-    /**
+	/**
 	 * Get the path of this repository
 	 *
 	 * This is the path of the `.git` folder for normal repositories,
 	 * or of the repository itself for bare repositories.
 	 *
 	 * @return the path to the repository
-     */
-    std::string path() const;
-	
-    /**
+	 */
+	std::string path() const;
+
+	/**
 	 * Get the path of the working directory for this repository
 	 *
 	 * If the repository is bare, this function will always return empty.
 	 *
 	 * @return the path to the working dir, if it exists
-     */
-    std::string workdir() const;
+	 */
+	std::string workdir() const;
 
 	/**
 	 * Set the path to the working directory for this repository
@@ -310,59 +310,59 @@ public:
 	 * @throws Exception
 	 */
 	void setWorkdir(const std::string& path, bool updateGitLink);
-		
-    /**
+
+	/**
 	 * Get the configuration file for this repository.
 	 *
 	 * If a configuration file has not been set, the default
 	 * config set for the repository will be returned, including
 	 * global and system configurations (if they are available).
-	 * 
+	 *
 	 * @return The configuration object.
 	 * @throws Exception
-     */
-    Config configuration() const;
+	 */
+	Config configuration() const;
 
-    /**
-     * Lookup a reference by its name in a repository.
-     *
-     * @throws Exception
-     * @return The reference with the given name
-     */
-    Reference lookupReference(const std::string& name) const;
+	/**
+	 * Lookup a reference by its name in a repository.
+	 *
+	 * @throws Exception
+	 * @return The reference with the given name
+	 */
+	Reference lookupReference(const std::string& name) const;
 
-    /**
-     * Lookup a reference by its name in a repository and returns the oid of its target.
-     *
-     * @throws Exception
-     * @return The OId of the target
-     */
-    OId lookupReferenceOId(const std::string& name) const;
+	/**
+	 * Lookup a reference by its name in a repository and returns the oid of its target.
+	 *
+	 * @throws Exception
+	 * @return The OId of the target
+	 */
+	OId lookupReferenceOId(const std::string& name) const;
 
-    /**
+	/**
 	 * Lookup a reference by DWIMing its short name
 	 *
 	 * Apply the git precendence rules to the given shorthand to determine
 	 * which reference the user is refering to.
-     *
-     * @param shorthand the short name for the reference
-     * @throws Exception
-     * @return The reference with the given name
-     */
-    Reference lookupShorthandReference(const std::string& shorthand) const;
+	 *
+	 * @param shorthand the short name for the reference
+	 * @throws Exception
+	 * @return The reference with the given name
+	 */
+	Reference lookupShorthandReference(const std::string& shorthand) const;
 
-    /**
-     * Lookup a commit object from a repository.
-     *
+	/**
+	 * Lookup a commit object from a repository.
+	 *
 	 * @param id Identity of the commit to locate. If the object is
 	 *		an annotated tag it will be peeled back to the commit (complete or short id).
-     * @throws Exception
-     */
-    Commit lookupCommit(const OId& oid) const;
+	 * @throws Exception
+	 */
+	Commit lookupCommit(const OId& oid) const;
 
 	/**
 	 * Lookup a branch by its name in a repository.
-	 * 
+	 *
 	 * @param branchName Name of the branch to be looked-up;
 	 * this name is validated for consistency.
 	 * @param branchType Type of the considered branch.
@@ -370,33 +370,33 @@ public:
 	 */
 	Branch lookupBranch(const std::string& branchName, git_branch_t branchType);
 
-    /**
-     * Lookup a tag object from the repository.
-     *
-     * @throws Exception
-     */
-    Tag lookupTag(const OId& oid) const;
+	/**
+	 * Lookup a tag object from the repository.
+	 *
+	 * @throws Exception
+	 */
+	Tag lookupTag(const OId& oid) const;
 
-    /**
-     * Lookup a tree object from the repository.
-     *
-     * @throws Exception
-     */
-    Tree lookupTree(const OId& oid) const;
+	/**
+	 * Lookup a tree object from the repository.
+	 *
+	 * @throws Exception
+	 */
+	Tree lookupTree(const OId& oid) const;
 
-    /**
-     * Lookup a blob object from a repository.
+	/**
+	 * Lookup a blob object from a repository.
 	 * @param id Identity of the blob to locate (complete or short id).
-     * @throws Exception
-     */
-    Blob lookupBlob(const OId& oid) const;
+	 * @throws Exception
+	 */
+	Blob lookupBlob(const OId& oid) const;
 
-    /**
-     * Lookup a reference to one of the objects in a repostory.
+	/**
+	 * Lookup a reference to one of the objects in a repostory.
 	 * @param id Identifier for the object (complete or short id).
-     * @throws Exception
-     */
-    Object lookup(const OId& oid) const;
+	 * @throws Exception
+	 */
+	Object lookup(const OId& oid) const;
 
 	/**
 	 * Create a new symbolic reference.
@@ -406,10 +406,10 @@ public:
 	 * The id permanently refers to the object (although the reference itself can be moved).
 	 * For example, in libgit2 the direct ref "refs/tags/v0.17.0" refers
 	 * to OID 5b9fac39d8a76b9139667c26a63e6b3f204b3977.
-	 * 
+	 *
 	 * The direct reference will be created in the repository and
 	 * written to the disk. The generated reference object must be freed by the user.
-	 * 
+	 *
 	 * Valid reference names must follow one of two patterns:
 	 *  - Top-level names must contain only capital letters and underscores,
 	 * and must begin and end with a letter. (e.g. "HEAD", "ORIG_HEAD").
@@ -417,21 +417,21 @@ public:
 	 * You must avoid the characters '~', '^', ':', ' \ ', '?', '[',
 	 * and '*', and the sequences ".." and " @ {" which have special
 	 * meaning to revparse.
-	 * 
+	 *
 	 * This function will throw an exception if a reference already
 	 * exists with the given name unless force is true,
 	 * in which case it will be overwritten.
-	 * 
+	 *
 	 * The signature and message for the reflog will be ignored if
 	 * the reference does not belong in the standard set
 	 * (HEAD, branches and remote-tracking branches) and and it does not have a reflog.
-     *
-     * @param name The name of the reference
-     * @param id The object id pointed to by the reference.
-     * @param force Overwrite existing references
-     * @throws Exception
-     */
-    Reference createReference(const std::string& name, const OId& id, bool force);
+	 *
+	 * @param name The name of the reference
+	 * @param id The object id pointed to by the reference.
+	 * @param force Overwrite existing references
+	 * @throws Exception
+	 */
+	Reference createReference(const std::string& name, const OId& id, bool force);
 
 	/**
 	 * Create a new symbolic reference.
@@ -459,36 +459,36 @@ public:
 	 * @param target Reference target
 	 * @param force True to overwrite existing reference with same name, if any.
 	 * @return Created reference.
-     * @throws Exception
+	 * @throws Exception
 	 */
 	Reference createSymbolicReference(const std::string& name, const std::string& target, bool force);
 
-    /**
-     * Create a new commit in the repository
-     *
-     * @throws Exception
-     */
-    OId createCommit(const std::string& ref,
-                         const Signature& author,
-                         const Signature& committer,
-                         const std::string& message,
-                         const Tree& tree,
-                         const std::list<Commit>& parents);
-    OId createCommit(const std::string& ref,
-                         const Signature& author,
-                         const Signature& committer,
-                         const std::string& messageEncoding,
-                         const std::string& message,
-                         const Tree& tree,
-                         const std::list<Commit>& parents);
+	/**
+	 * Create a new commit in the repository
+	 *
+	 * @throws Exception
+	 */
+	OId createCommit(const std::string& ref,
+						 const Signature& author,
+						 const Signature& committer,
+						 const std::string& message,
+						 const Tree& tree,
+						 const std::list<Commit>& parents);
+	OId createCommit(const std::string& ref,
+						 const Signature& author,
+						 const Signature& committer,
+						 const std::string& messageEncoding,
+						 const std::string& message,
+						 const Tree& tree,
+						 const std::list<Commit>& parents);
 
 	/**
 	 * Create a new branch pointing at a target commit
-	 * 
+	 *
 	 * A new direct reference will be created pointing to this target commit.
 	 * If force is true and a reference already exists with the given name, it'll be replaced.
 	 * The branch name will be checked for validity.
-	 * 
+	 *
 	 * @param branchName Name for the branch; this name is validated for consistency.
 	 * It should also not conflict with an already existing branch name.
 	 * @param target Commit to which this branch should point.
@@ -497,110 +497,110 @@ public:
 	 */
 	Branch createBranch(const std::string& branchName, const Commit& target, bool force);
 
-    /**
-     * Create a new lightweight tag pointing at a target object
-     *
-     * A new direct reference will be created pointing to
-     * this target object. If `force` is true and a reference
-     * already exists with the given name, it'll be replaced.
-     *
-     * @throws Exception
-     */
-    OId createTag(const std::string& name,
-                      const Object& target,
-                      bool overwrite = true);
+	/**
+	 * Create a new lightweight tag pointing at a target object
+	 *
+	 * A new direct reference will be created pointing to
+	 * this target object. If `force` is true and a reference
+	 * already exists with the given name, it'll be replaced.
+	 *
+	 * @throws Exception
+	 */
+	OId createTag(const std::string& name,
+					  const Object& target,
+					  bool overwrite = true);
 
-    /**
-     * Create a new tag in the repository from an object
-     *
-     * A new reference will also be created pointing to
-     * this tag object. If `overwrite` is true and a reference
-     * already exists with the given name, it'll be replaced.
-     *
-     * @throws Exception
-     */
-    OId createTag(const std::string& name,
-                      const Object& target,
-                      const Signature& tagger,
-                      const std::string& message,
-                      bool overwrite = true);
+	/**
+	 * Create a new tag in the repository from an object
+	 *
+	 * A new reference will also be created pointing to
+	 * this tag object. If `overwrite` is true and a reference
+	 * already exists with the given name, it'll be replaced.
+	 *
+	 * @throws Exception
+	 */
+	OId createTag(const std::string& name,
+					  const Object& target,
+					  const Signature& tagger,
+					  const std::string& message,
+					  bool overwrite = true);
 
-    /**
-     * Delete an existing tag reference.
-     *
-     * @throws Exception
-     */
-    void deleteTag(const std::string& name);
+	/**
+	 * Delete an existing tag reference.
+	 *
+	 * @throws Exception
+	 */
+	void deleteTag(const std::string& name);
 
-    /**
-     * Write an in-memory buffer to the ODB as a blob
-     *
-     * @param buffer Data to be written into the blob
-     * @return Created loose blob OId.
-     * @throws Exception
-     */
-    OId createBlobFromBuffer(const std::vector<unsigned char>& buffer);
-    OId createBlobFromBuffer(const void* buffer, size_t len);
-    
-    // TODO Wrap git_blob_create_fromchunks
+	/**
+	 * Write an in-memory buffer to the ODB as a blob
+	 *
+	 * @param buffer Data to be written into the blob
+	 * @return Created loose blob OId.
+	 * @throws Exception
+	 */
+	OId createBlobFromBuffer(const std::vector<unsigned char>& buffer);
+	OId createBlobFromBuffer(const void* buffer, size_t len);
 
-    /**
-     * Read a file from the filesystem and write its content
-     * to the Object Database as a loose blob
-     *
-     * @param path file from which the blob will be created
-     * @return Created loose blob OId.
-     * @throws Exception
-     */
-    OId createBlobFromDisk(const std::string& path);
-    OId createBlobFromDisk(const char* path);
+	// TODO Wrap git_blob_create_fromchunks
 
-    /**
-     * Read a file from the working folder of a repository and
-     * write it to the Object Database as a loose blob
-     *
-     * @param path file from which the blob will be created,
-     * relative to the repository's working dir
-     * @return Created loose blob OId.
-     * @throws Exception
-     */
-    OId createBlobFromWorkdir(const std::string& relativePath);
-    OId createBlobFromWorkdir(const char* relativePath);
+	/**
+	 * Read a file from the filesystem and write its content
+	 * to the Object Database as a loose blob
+	 *
+	 * @param path file from which the blob will be created
+	 * @return Created loose blob OId.
+	 * @throws Exception
+	 */
+	OId createBlobFromDisk(const std::string& path);
+	OId createBlobFromDisk(const char* path);
+
+	/**
+	 * Read a file from the working folder of a repository and
+	 * write it to the Object Database as a loose blob
+	 *
+	 * @param path file from which the blob will be created,
+	 * relative to the repository's working dir
+	 * @return Created loose blob OId.
+	 * @throws Exception
+	 */
+	OId createBlobFromWorkdir(const std::string& relativePath);
+	OId createBlobFromWorkdir(const char* relativePath);
 
 
-    /**
-     * Create a list with all the tags in the Repository
-     * which name match a defined pattern
-     *
-     * If an empty pattern is provided, all the tags
-     * will be returned.
-     *
-     * @param pattern Standard fnmatch pattern
-     * @throws Exception
-     */
-    std::list<std::string> listTags(const std::string& pattern = "") const;
+	/**
+	 * Create a list with all the tags in the Repository
+	 * which name match a defined pattern
+	 *
+	 * If an empty pattern is provided, all the tags
+	 * will be returned.
+	 *
+	 * @param pattern Standard fnmatch pattern
+	 * @throws Exception
+	 */
+	std::list<std::string> listTags(const std::string& pattern = "") const;
 
-    /**
-     * Create a list with all references in the Repository.
-     *
-     * @throws Exception
-     */
-    std::list<std::string> listReferences() const;
+	/**
+	 * Create a list with all references in the Repository.
+	 *
+	 * @throws Exception
+	 */
+	std::list<std::string> listReferences() const;
 
 	/**
 	 * Perform a callback on each reference in the repository.
-	 * 
+	 *
 	 * The `callback` function will be called for each reference in the
 	 * repository, receiving the name of the reference.
 	 * Returning a false value from the callback
 	 * will terminate the iteration.
-	 * 
+	 *
 	 * @return True if iteration terminated by user, false if iteration terminate completely.
 	 */
 	bool foreachReference(std::function<bool(Reference)> callback);
 	bool foreachReferenceName(std::function<bool(const std::string&)> callback);
-	
-    /**
+
+	/**
 	 * Get the Object Database for this repository.
 	 *
 	 * If a custom ODB has not been set, the default
@@ -608,13 +608,13 @@ public:
 	 * located in `.git/objects`).
 	 *
 	 * @return Object database.
-     * @throws Exception
-     */
-    Database database() const;
-    
-    // TODO Implement git_repository_refdb
+	 * @throws Exception
+	 */
+	Database database() const;
 
-    /**
+	// TODO Implement git_repository_refdb
+
+	/**
 	 * Get the Index file for this repository.
 	 *
 	 * If a custom index has not been set, the default
@@ -622,9 +622,9 @@ public:
 	 * located in `.git/index`).
 	 *
 	 * @return The Index file for this repository.
-	 * @throws Exception 
-     */
-    Index index() const;
+	 * @throws Exception
+	 */
+	Index index() const;
 
 	/**
 	 * Set the index file for this repository
@@ -639,23 +639,23 @@ public:
 	 * @param index An index object
 	 */
 //	void setIndex(Index& index);
-	
+
 	/**
 	 * Write the index as a tree to the given repository
-	 * 
+	 *
 	 * The index must not contain any file in conflict.
-	 * 
+	 *
 	 * @param index Index to write
 	 * @return OID of the the written tree
 	 */
 //	OId writeIndexTree(Index& index);
 
-/** 
+/**
  * @name Message
  * @{
  */
 
-	/** 
+	/**
 	 * Retrieve git's prepared message
 	 *
 	 * Operations such as git revert/cherry-pick/merge with the -n option
@@ -668,7 +668,7 @@ public:
 	 * remove the file after you create the commit.
 	 */
 	std::string message()const;
-	
+
 	/**
 	 * Remove git's prepared message.
 	 */
@@ -680,14 +680,14 @@ public:
  * @name Status
  * @{
  */
- 
+
 	/**
-	 * Gather file statuses and run a callback for each one. 
+	 * Gather file statuses and run a callback for each one.
 	 * The callback is passed the path of the file, the status (a combination of
 	 * the `git_status_t` values above).
 	 *
 	 * If the callback returns false, this function will stop looping and return false.
-	 * 
+	 *
 	 * @param show `git_status_show_t` constants that
 	 * control which files to scan and in what order.
 	 * @param flags OR'ed combination of the `git_status_opt_t`
@@ -700,14 +700,14 @@ public:
 
 	/**
 	 * Get file status for a single file.
-	 * 
+	 *
 	 * @param path The file to retrieve status for, rooted at the repo's workdir
 	 */
 	Status status(const std::string& path);
 
 	/**
 	 * Gather file status information and populate a list.
-	 * 
+	 *
 	 * @param show `git_status_show_t` constants that
 	 * control which files to scan and in what order.
 	 * @param flags OR'ed combination of the `git_status_opt_t`
@@ -736,7 +736,7 @@ public:
 	 * @throws Exception
 	 */
 	Remote* createRemote(const std::string& name, const std::string& url);
-	
+
 	/**
 	 * Create a remote in memory
 	 *
@@ -760,35 +760,126 @@ public:
 
 	/**
 	 * Get a list of the configured remotes for a repo
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	std::vector<std::string> listRemote();
-	
+
 	/**
 	 * Return the name of the reference supporting the remote tracking branch,
 	 * given the name of a local branch reference.
-	 * 
+	 *
 	 * @param canonicalBranchName name of the local branch.
 	 * @return Remote tracking branch name. Empty if not found.
 	 */
 	std::string getBranchUpstreamName(const std::string& canonicalBranchName);
-	
+
 	/**
 	 * Return the name of remote that the remote tracking branch belongs to.
-	 * 
+	 *
 	 * @param canonicalBranchName name of the local branch.
 	 * @return Remote tracking remote name. Empty if not found.
 	 */
 	 std::string getBranchRemoteName(const std::string& canonicalBranchName);
-	 
+
+	/**
+	 * Set the remote's url
+	 *
+	 * Existing connections will not be updated.
+	 *
+	 * @param remote Name of the remote.
+	 * @param url The URL to set on the remote.
+	 */
+	void setUrl(const std::string& remote, const std::string& url);
+
+	/**
+	 * Set the remote's url for pushing
+	 *
+	 * Existing connections will not be updated
+	 *
+	 * @param remote Name of the remote.
+	 * @param url The URL to set on the remote..
+	 */
+	void setPushUrl(const std::string& remote, const std::string& url);
+
+	/**
+	 * Add a fetch refspec to the remote.
+	 *
+	 * Convenience function for adding a single fetch refspec to the current list in the remote.
+	 *
+	 * @param remote Name of the remote.
+	 * @param refspec the new fetch refspec
+	 */
+	void addFetch(const std::string& remote, const std::string& refspec);
+
+	/**
+	 * Add a push refspec to the remote.
+	 *
+	 * Convenience function for adding a single push refspec to the current list in the remote.
+	 *
+	 * @param remote Name of the remote.
+	 * @param refspec the new push refspec
+	 */
+	void addPush(const std::string& remote, const std::string& refspec);
+
+	/**
+	 * Set the tag auto-follow setting
+	 *
+	 *
+	 */
+	void setAutotags(const std::string& remote, git_remote_autotag_option_t value);
+
+	/**
+	 * Give the remote a new name
+	 *
+	 * All remote-tracking branches and configuration settings
+	 * for the remote are updated.
+	 *
+	 * The new name will be checked for validity.
+	 *
+	 * A temporary in-memory remote cannot be given a name with this method.
+	 */
+	void rename(std::vector<std::string>& problems, const std::string& oldName,
+				const std::string& newName);
+
 /** @} */
-	
+
 	/**
 	 * Create a revision walker for this repository.
 	 */
 	RevWalk createRevWalk();
-	
+
+/**
+ * @name RefLogs
+ * @{
+ */
+
+	/**
+	 * Read the reflog for the given repository
+	 *
+	 * @param name Name of the reflog to remove.
+	 * @return The reflog.
+	 * @throws Exception
+	 */
+	RefLog readRefLog(const std::string& name);
+
+	/**
+	 * Rename the reflog for the given reference
+	 *
+	 * @param oldName Old reflog name.
+	 * @param newName New reflog name.
+	 * @throws Exception
+	 */
+	void renameRefLog(const std::string& oldName, const std::string& newName);
+
+	/**
+	 * Delete the reflog for the given reference
+	 *
+	 * @param name Name of the reflog to remove.
+	 * @throws Exception
+	 */
+	void deleteRefLog(const std::string& name);
+
 	/**
 	 * Count the number of unique commits between two commit objects
 	 *
@@ -796,17 +887,19 @@ public:
 	 * upstream relationship, but it helps to think of one as a branch and
 	 * the other as its upstream, the `ahead` and `behind` values will be
 	 * what git would report for the branches.
-	 * 
+	 *
 	 * @param local the commit for local
 	 * @param upstream the commit for upstream
 	 */
 	std::pair<size_t, size_t> aheadBehind(const OId& local, const OId& upstream)const;
-	
+
+/** @} */
+
 /**
  * @name Ignore
  * @{
  */
-	
+
 	/**
 	 * Add ignore rules for a repository.
 	 *
@@ -838,7 +931,7 @@ public:
 	 * The default internal ignores ignore ".", ".." and ".git" entries.
 	 */
 	void clearIgnoreInternalRules();
-	
+
 	/**
 	 * Test if the ignore rules apply to a given path.
 	 *
@@ -864,7 +957,7 @@ public:
 
 	// TODO implement git_repository_fetchhead_foreach
 	// TODO implement git_repository_mergehead_foreach
-	
+
 	/**
 	 * Calculate hash of file using repository filtering rules.
 	 *
@@ -872,9 +965,9 @@ public:
 	 * you can just use the `Database::hash()` API.  However, if you want to
 	 * hash a file in the repository and you want to apply filtering rules (e.g.
 	 * crlf filters) before generating the SHA, then use this function.
-	 * 
+	 *
 	 * @param path Path to file on disk whose contents should be hashed.
-	 * 			Can be a relative path.
+	 *			Can be a relative path.
 	 * @param type The object type to hash as (e.g. GIT_OBJ_BLOB)
 	 * @param asPath The path to use to look up filtering rules. If this is
 	 *             empty, then the `path` parameter will be used instead. If
@@ -896,11 +989,11 @@ public:
 	 *
 	 * Otherwise, the HEAD will be detached and will directly point to
 	 * the Commit.
-	 * 
+	 *
 	 * @param refname Canonical name of the reference the HEAD should point at
 	 */
 	void setHead(const std::string& refname);
-	
+
 	/**
 	 * Make the repository HEAD directly point to the Commit.
 	 *
@@ -912,7 +1005,7 @@ public:
 	 *
 	 * Otherwise, the HEAD will eventually be detached and will directly point to
 	 * the peeled Commit.
-	 * 
+	 *
 	 * @param commitish Object id of the Commit the HEAD should point to
 	 */
 	// TODO TODO Need reworked OId
@@ -921,19 +1014,19 @@ public:
 	/**
 	 * Detach the HEAD.
 	 *
-	 * If the HEAD is already detached and points to a non commitish, the HEAD is 
+	 * If the HEAD is already detached and points to a non commitish, the HEAD is
 	 * unaltered, and an exception is raised.
 	 */
 	void detachHead();
-	
+
 	/**
 	 * Determines the status of a git repository - ie, whether an operation
 	 * (merge, cherry-pick, etc) is in progress.
-	 * 
+	 *
 	 * @see git_repository_state_t
 	 */
 	int state()const;
-	
+
 /**
  * @name Namespaces
  * @{
@@ -944,13 +1037,13 @@ public:
 	 *
 	 * This namespace affects all reference operations for the repo.
 	 * See `man gitnamespaces`
-	 * 
+	 *
 	 * @param nmspace The namespace. This should not include the refs
 	 *	folder, e.g. to namespace all references under `refs/namespaces/foo/`,
 	 *	use `foo` as the namespace.
 	 */
 	void setNamespace(const std::string& nmspace);
-	
+
 	/**
 	 * Get the currently active namespace for this repository
 	 */
@@ -962,12 +1055,12 @@ public:
 	 * Determine if the repository was a shallow clone
 	 */
 	bool shallow()const;
-	
+
 /**
  * @name Reset
  * @{
  */
- 
+
 	/**
 	 * Sets the current head to the specified commit oid and optionally
 	 * resets the index and working tree to match.
@@ -991,7 +1084,7 @@ public:
 	 * @param resetType Kind of reset operation to perform.
 	 */
 	void reset(Object& target, git_reset_t resetType);
-	
+
 	/**
 	 * Updates some entries in the index from the target commit tree.
 	 *
@@ -1005,9 +1098,9 @@ public:
 	 * of the index.
 	 *
 	 * @param pathspecs List of pathspecs to operate on.
-	 */ 
+	 */
 	void resetDefault(Object* target, const std::vector<std::string> pathspecs);
-	
+
 /** @} */
 
 /**
@@ -1029,7 +1122,7 @@ public:
 	 * @param repo The repository containing the trees.
 	 * @param oldTree A Tree object to diff from, or default constructed empty tree.
 	 * @param newTree A Tree object to diff to, or default constructed empty tree.
-	 * 
+	 *
 	 * TODO add option parameter description
 	 */
 	DiffList diffTreeToTree(Tree oldTree, Tree newTree);
@@ -1050,7 +1143,7 @@ public:
 	 *
 	 * @param oldTree A Tree object to diff from, or default constructed empty tree.
 	 * @param index The index to diff with; repo index used if default constructed empty index.
-	 * 
+	 *
 	 * TODO add option parameter description
 	 */
 	DiffList diffTreeToIndex(Tree oldTree, Index index);
@@ -1072,7 +1165,7 @@ public:
 	 * working directory will be used for the "new_file" side of the delta.
 	 *
 	 * @param index The index to diff from; repo index used if default constructed empty index.
-	 * 
+	 *
 	 * TODO add option parameter description
 	 */
 	DiffList diffIndexToWorkdir(Index index);
@@ -1107,7 +1200,7 @@ public:
 	 * show status 'deleted' since there is a pending deletion in the index.
 	 *
 	 * @param oldTree A Tree object to diff from, or default construct for empty tree.
-	 * 
+	 *
 	 * TODO add option parameter description
 	 */
 	DiffList diffTreeToWorkdir(Tree oldTree);
@@ -1131,7 +1224,7 @@ public:
 	 * the commit pointed at by HEAD.
 	 *
 	 * The repository must be non-bare.
-	 * 
+	 *
 	 * @param strategy See git_checkout_strategy_t, default to GIT_CHECKOUT_NONE
 	 * @param disableFilters Don't apply filters like CRLF conversion
 	 * @param dirMode default is 0755
@@ -1146,8 +1239,8 @@ public:
 	 * @param baseline expected content of workdir, defaults to HEAD
 	 * @param targetDirectory alternative checkout path to workdir
 	 */
-	void checkoutHead(unsigned int strategy = GIT_CHECKOUT_NONE, bool disableFilters = false, 
-		unsigned int dirMode = 0, unsigned int fileMode = 0, 
+	void checkoutHead(unsigned int strategy = GIT_CHECKOUT_NONE, bool disableFilters = false,
+		unsigned int dirMode = 0, unsigned int fileMode = 0,
 		int fileOpenFlags = 0 , unsigned int notifyFlags = 0,
 		CheckoutNotifyCallbackFunction notifyCb = CheckoutNotifyCallbackFunction(),
 		CheckoutProgressCallbackFunction progressCb = CheckoutProgressCallbackFunction(),
@@ -1158,9 +1251,9 @@ public:
 
 	/**
 	 * Updates files in the working tree to match the content of the index.
-	 * 
+	 *
 	 * The repository must be non-bare.
-	 * 
+	 *
 	 * @param index index to be checked out, default to use repository index
 	 * @param strategy See git_checkout_strategy_t, default to GIT_CHECKOUT_NONE
 	 * @param disableFilters Don't apply filters like CRLF conversion
@@ -1177,8 +1270,8 @@ public:
 	 * @param targetDirectory alternative checkout path to workdir
 	 */
 	void checkoutIndex(Index index = Index(),
-		unsigned int strategy = GIT_CHECKOUT_NONE, bool disableFilters = false, 
-		unsigned int dirMode = 0, unsigned int fileMode = 0, 
+		unsigned int strategy = GIT_CHECKOUT_NONE, bool disableFilters = false,
+		unsigned int dirMode = 0, unsigned int fileMode = 0,
 		int fileOpenFlags = 0 , unsigned int notifyFlags = 0,
 		CheckoutNotifyCallbackFunction notifyCb = CheckoutNotifyCallbackFunction(),
 		CheckoutProgressCallbackFunction progressCb = CheckoutProgressCallbackFunction(),
@@ -1188,10 +1281,10 @@ public:
 		);
 	/**
 	 * Updates files in the index and working tree to match the content of the
-	 * tree pointed at by the treeish. 
-	 * 
+	 * tree pointed at by the treeish.
+	 *
 	 * The repository must be non-bare.
-	 * 
+	 *
 	 * @param treeish a commit, tag or tree which content will be used to update
 	 * the working directory
 	 * @param strategy See git_checkout_strategy_t, default to GIT_CHECKOUT_NONE
@@ -1209,8 +1302,8 @@ public:
 	 * @param targetDirectory alternative checkout path to workdir
 	 */
 	void checkoutTree(Object treeish,
-		unsigned int strategy = GIT_CHECKOUT_NONE, bool disableFilters = false, 
-		unsigned int dirMode = 0, unsigned int fileMode = 0, 
+		unsigned int strategy = GIT_CHECKOUT_NONE, bool disableFilters = false,
+		unsigned int dirMode = 0, unsigned int fileMode = 0,
 		int fileOpenFlags = 0 , unsigned int notifyFlags = 0,
 		CheckoutNotifyCallbackFunction notifyCb = CheckoutNotifyCallbackFunction(),
 		CheckoutProgressCallbackFunction progressCb = CheckoutProgressCallbackFunction(),
@@ -1225,10 +1318,10 @@ public:
  * @name Stash
  * @{
  */
- 
+
 	/**
 	* Save the local modifications to a new stash.
-	* 
+	*
 	* @param stasher The identity of the person performing the stashing.
 	* @param message Optional description along with the stashed state.
 	* @param flags Flags to control the stashing process. (see GIT_STASH_*)
@@ -1253,12 +1346,11 @@ public:
 /** @} */
 
 protected:
-    /**
-     * Construct a wrapper around a libgit2 repository pointer.
-     */
-    Repository(git_repository *repository);
+	/**
+	 * Construct a wrapper around a libgit2 repository pointer.
+	 */
+	Repository(git_repository *repository);
 };
 
 } // namespace git2
 #endif // _GIT2PP_REPOSITORY_HPP_
-

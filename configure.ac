@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
-AC_INIT(libgit2pp, 0.19.0)
+AC_INIT(libgit2pp, 0.23.3)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([aux])
@@ -19,7 +19,7 @@ LT_INIT
 
 
 
-PKG_CHECK_MODULES(LIBGIT2PP, [libgit2 = 0.19.0])
+PKG_CHECK_MODULES(LIBGIT2PP, [libgit2 = 0.23.3])
 
 
 

@@ -94,31 +94,31 @@ int64_t Config::parseInt64(const std::string& value)
     return res;
 }
 
-void Config::refresh()
-{
-    Exception::git2_assert( git_config_refresh(data()) );
-}
+// void Config::refresh()
+// {
+//     Exception::git2_assert( git_config_refresh(data()) );
+// }
 
-std::string Config::findGlobal()
-{
-    char buffer[GIT_PATH_MAX];
-    Exception::git2_assert(git_config_find_global(buffer, GIT_PATH_MAX) );
-    return std::string(buffer);
-}
+// std::string Config::findGlobal()
+// {
+//     char buffer[GIT_PATH_MAX];
+//     Exception::git2_assert(git_config_find_global(buffer, GIT_PATH_MAX) );
+//     return std::string(buffer);
+// }
 
-std::string Config::findSystem()
-{
-    char buffer[GIT_PATH_MAX];
-    Exception::git2_assert( git_config_find_system(buffer, GIT_PATH_MAX) );
-    return std::string(buffer);
-}
+// std::string Config::findSystem()
+// {
+//     char buffer[GIT_PATH_MAX];
+//     Exception::git2_assert( git_config_find_system(buffer, GIT_PATH_MAX) );
+//     return std::string(buffer);
+// }
 
-std::string Config::findXdg()
-{
-    char buffer[GIT_PATH_MAX];
-    Exception::git2_assert( git_config_find_xdg(buffer, GIT_PATH_MAX) );
-    return std::string(buffer);
-}
+// std::string Config::findXdg()
+// {
+//     char buffer[GIT_PATH_MAX];
+//     Exception::git2_assert( git_config_find_xdg(buffer, GIT_PATH_MAX) );
+//     return std::string(buffer);
+// }
 
 
 bool Config::addFile(const std::string &path, Level level, bool force)

@@ -2,17 +2,17 @@
 /*
  * libgit2pp
  * Copyright (C) 2014 Émilien Kia <emilien.kia@gmail.com>
- * 
+ *
  * libgit2pp is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * libgit2pp is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
@@ -22,6 +22,7 @@
 
 #include <git2.h>
 
+#include <functional>
 #include <memory>
 
 #include "common.hpp"
@@ -50,7 +51,7 @@ class DiffPatch;
  *		diff process continues.
  * - returns 0, the delta is inserted into the diff list, and the diff process
  *		continues.
- * 
+ *
  * @param list List to which the delta will be inserted
  * @param delta Delta to insert in the list
  * @param matchedPathspec Path spec
@@ -69,7 +70,7 @@ typedef std::function<bool(const DiffDelta& delta, float progress)> DiffFileCall
 /**
  * When iterating over a diff, callback that will be made per hunk.
  */
-typedef std::function<bool(const DiffDelta& delta, const git_diff_range *range, const std::string& header)> DiffHunkCallbackFunction;
+typedef std::function<bool(const DiffDelta& delta, const git_diff_hunk *range, const std::string& header)> DiffHunkCallbackFunction;
 
 
 /**
@@ -80,7 +81,7 @@ typedef std::function<bool(const DiffDelta& delta, const git_diff_range *range, 
  * of text.  This uses some extra GIT_DIFF_LINE_... constants for output
  * of lines of file and hunk headers.
  */
-typedef std::function<bool(const DiffDelta& delta, const git_diff_range *range, char line_origin,const std::string& content)> DiffDataCallbackFunction;
+typedef std::function<bool(const DiffDelta& delta, const git_diff_hunk *hunk, char line_origin,const std::string& content)> DiffDataCallbackFunction;
 
 
 
@@ -199,128 +200,128 @@ protected:
 	uint32_t    _flags;
 };
 
-/**
- * The diff list object that contains all individual file deltas.
- */
-class DiffList : public helper::Git2PtrWrapper<git_diff_list, git_diff_list_free>
-{
-public:
-	DiffList(git_diff_list*);
-	DiffList(const DiffList& other);
+// /**
+//  * The diff list object that contains all individual file deltas.
+//  */
+// class DiffList : public helper::Git2PtrWrapper<git_diff_list, git_diff_list_free>
+// {
+// public:
+// 	DiffList(git_diff_list*);
+// 	DiffList(const DiffList& other);
 
-	/**
-	 * Merge one diff list into another.
-	 *
-	 * This merges items from the "from" list into the "this" list.  The
-	 * resulting diff list will have all items that appear in either list.
-	 * If an item appears in both lists, then it will be "merged" to appear
-	 * as if the old version was from the "onto" list and the new version
-	 * is from the "from" list (with the exception that if the item has a
-	 * pending DELETE in the middle, then it will show as deleted).
-	 */
-	void merge(const DiffList& from);
-	
-	/**
-	 * Transform a diff list marking file renames, copies, etc.
-	 *
-	 * This modifies a diff list in place, replacing old entries that look
-	 * like renames or copies with new entries reflecting those changes.
-	 * This also will, if requested, break modified files into add/remove
-	 * pairs if the amount of change is above a threshold.
-	 * 
-	 * @param flags Combination of git_diff_find_t values (default FIND_RENAMES)
-	 * @param renameThreshold Similarity to consider a file renamed (default 50)
-	 * @param renameFromRewriteThreshold Similarity of modified to be eligible rename source (default 50)
-	 * @param copyThreshold Similarity to consider a file a copy (default 50)
-	 * @param breakRewriteThreshold Similarity to split modify into delete/add pair (default 60)
-	 * @param renameLimit Maximum similarity sources to examine for a file (somewhat like
-	 *  git-diff's `-l` option or `diff.renameLimit` config) (default 200)
-	 * 
-	 * TODO add git_diff_similarity_metric *metric
-	 */
-	bool findSimilar();
-	bool findSimilar(uint32_t flags, uint16_t renameThreshold=50,
-			uint16_t renameFromRewriteThreshold = 50, uint16_t copyThreshold = 50,
-			uint16_t breakRewriteThreshold = 60, size_t renameLimit = 200);
+// 	/**
+// 	 * Merge one diff list into another.
+// 	 *
+// 	 * This merges items from the "from" list into the "this" list.  The
+// 	 * resulting diff list will have all items that appear in either list.
+// 	 * If an item appears in both lists, then it will be "merged" to appear
+// 	 * as if the old version was from the "onto" list and the new version
+// 	 * is from the "from" list (with the exception that if the item has a
+// 	 * pending DELETE in the middle, then it will show as deleted).
+// 	 */
+// 	void merge(const DiffList& from);
 
-	/**
-	 * Loop over all deltas in a diff list issuing callbacks.
-	 *
-	 * This will iterate through all of the files described in a diff.  You
-	 * should provide a file callback to learn about each file.
-	 *
-	 * The "hunk" and "line" callbacks are optional, and the text diff of the
-	 * files will only be calculated if they are not NULL.  Of course, these
-	 * callbacks will not be invoked for binary files on the diff list or for
-	 * files whose only changed is a file mode change.
-	 * 
-	 * @param fileCallback Callback function to make per file in the diff.
-	 * @param hunkCallback Optional callback to make per hunk of text diff.  This
-	 *                callback is called to describe a range of lines in the
-	 *                diff.  It will not be issued for binary files.
-	 * @param lineCallback Optional callback to make per line of diff text.  This
-	 *                same callback will be made for context lines, added, and
-	 *                removed lines, and even for a deleted trailing newline.
-	 * @return true if completly terminated and false if user terminated.
-	 */
-	bool foreach(DiffFileCallbackFunction fileCallback, DiffHunkCallbackFunction hunkCallback,
-		DiffDataCallbackFunction lineCallback);
+// 	/**
+// 	 * Transform a diff list marking file renames, copies, etc.
+// 	 *
+// 	 * This modifies a diff list in place, replacing old entries that look
+// 	 * like renames or copies with new entries reflecting those changes.
+// 	 * This also will, if requested, break modified files into add/remove
+// 	 * pairs if the amount of change is above a threshold.
+// 	 *
+// 	 * @param flags Combination of git_diff_find_t values (default FIND_RENAMES)
+// 	 * @param renameThreshold Similarity to consider a file renamed (default 50)
+// 	 * @param renameFromRewriteThreshold Similarity of modified to be eligible rename source (default 50)
+// 	 * @param copyThreshold Similarity to consider a file a copy (default 50)
+// 	 * @param breakRewriteThreshold Similarity to split modify into delete/add pair (default 60)
+// 	 * @param renameLimit Maximum similarity sources to examine for a file (somewhat like
+// 	 *  git-diff's `-l` option or `diff.renameLimit` config) (default 200)
+// 	 *
+// 	 * TODO add git_diff_similarity_metric *metric
+// 	 */
+// 	bool findSimilar();
+// 	bool findSimilar(uint32_t flags, uint16_t renameThreshold=50,
+// 			uint16_t renameFromRewriteThreshold = 50, uint16_t copyThreshold = 50,
+// 			uint16_t breakRewriteThreshold = 60, size_t renameLimit = 200);
 
-	/**
-	 * Iterate over a diff generating text output like "git diff --name-status".
-	 * 
-	 * @return true if completly terminated and false if user terminated.
-	 */
-	bool printCompact(DiffDataCallbackFunction printCallback);
+// 	/**
+// 	 * Loop over all deltas in a diff list issuing callbacks.
+// 	 *
+// 	 * This will iterate through all of the files described in a diff.  You
+// 	 * should provide a file callback to learn about each file.
+// 	 *
+// 	 * The "hunk" and "line" callbacks are optional, and the text diff of the
+// 	 * files will only be calculated if they are not NULL.  Of course, these
+// 	 * callbacks will not be invoked for binary files on the diff list or for
+// 	 * files whose only changed is a file mode change.
+// 	 *
+// 	 * @param fileCallback Callback function to make per file in the diff.
+// 	 * @param hunkCallback Optional callback to make per hunk of text diff.  This
+// 	 *                callback is called to describe a range of lines in the
+// 	 *                diff.  It will not be issued for binary files.
+// 	 * @param lineCallback Optional callback to make per line of diff text.  This
+// 	 *                same callback will be made for context lines, added, and
+// 	 *                removed lines, and even for a deleted trailing newline.
+// 	 * @return true if completly terminated and false if user terminated.
+// 	 */
+// 	bool foreach(DiffFileCallbackFunction fileCallback, DiffHunkCallbackFunction hunkCallback,
+// 		DiffDataCallbackFunction lineCallback);
 
-	/**
-	 * Iterate over a diff generating text output like "git diff --raw".
-	 * 
-	 * @return true if completly terminated and false if user terminated.
-	 */
-	bool printRaw(DiffDataCallbackFunction printCallback);
+// 	/**
+// 	 * Iterate over a diff generating text output like "git diff --name-status".
+// 	 *
+// 	 * @return true if completly terminated and false if user terminated.
+// 	 */
+// 	bool printCompact(DiffDataCallbackFunction printCallback);
 
-	/**
-	 * Iterate over a diff generating text output like "git diff".
-	 *
-	 * This is a super easy way to generate a patch from a diff.
-	 * 
-	 * @return true if completly terminated and false if user terminated.
-	 */
-	bool printPatch(DiffDataCallbackFunction printCallback);
+// 	/**
+// 	 * Iterate over a diff generating text output like "git diff --raw".
+// 	 *
+// 	 * @return true if completly terminated and false if user terminated.
+// 	 */
+// 	bool printRaw(DiffDataCallbackFunction printCallback);
 
-	/**
-	 * Query how many diff records are there in a diff list.
-	 * 
-	 * @return Count of number of deltas in the list
-	 */
-	size_t deltaCount()const;
-	
-	/**
-	 * Query how many diff deltas are there in a diff list filtered by type.
-	 * 
-	 * @param type A git_delta_t value to filter the count
-	 * @return Count of number of deltas matching delta_t type
-	 */
-	size_t deltaCount(git_delta_t type)const;
+// 	/**
+// 	 * Iterate over a diff generating text output like "git diff".
+// 	 *
+// 	 * This is a super easy way to generate a patch from a diff.
+// 	 *
+// 	 * @return true if completly terminated and false if user terminated.
+// 	 */
+// 	bool printPatch(DiffDataCallbackFunction printCallback);
 
-	/**
-	 * Return the diff patch for an entry in the diff list.
-	 * 
-	 * @param idx Index into diff list
-	 * @return delta patch object
-	 */
-	DiffPatch patch(size_t idx);
-	
-	/**
-	 * Return the diff delta for an entry in the diff list.
-	 *
-	 * @param idx Index into diff list
-	 * @return delta patch object
-	 */
-	DiffDelta delta(size_t idx);
+// 	/**
+// 	 * Query how many diff records are there in a diff list.
+// 	 *
+// 	 * @return Count of number of deltas in the list
+// 	 */
+// 	size_t deltaCount()const;
 
-};
+// 	/**
+// 	 * Query how many diff deltas are there in a diff list filtered by type.
+// 	 *
+// 	 * @param type A git_delta_t value to filter the count
+// 	 * @return Count of number of deltas matching delta_t type
+// 	 */
+// 	size_t deltaCount(git_delta_t type)const;
+
+// 	/**
+// 	 * Return the diff patch for an entry in the diff list.
+// 	 *
+// 	 * @param idx Index into diff list
+// 	 * @return delta patch object
+// 	 */
+// 	DiffPatch patch(size_t idx);
+
+// 	/**
+// 	 * Return the diff delta for an entry in the diff list.
+// 	 *
+// 	 * @param idx Index into diff list
+// 	 * @return delta patch object
+// 	 */
+// 	DiffDelta delta(size_t idx);
+
+// };
 
 /**
  * The diff patch is used to store all the text diffs for a delta.
@@ -328,91 +329,91 @@ public:
  * You can easily loop over the content of patches and get information about
  * them.
  */
-class DiffPatch : public helper::Git2PtrWrapper<git_diff_patch, git_diff_patch_free>
-{
-public:
-	DiffPatch(git_diff_patch* patch);
-	DiffPatch(const DiffPatch& other);
+// class DiffPatch : public helper::Git2PtrWrapper<git_diff_patch, git_diff_patch_free>
+// {
+// public:
+// 	DiffPatch(git_diff_patch* patch);
+// 	DiffPatch(const DiffPatch& other);
 
-	/** 
-	 * Get the delta associated with a patch
-	 */
-	DiffDelta delta()const;
-	
-	/**
-	 * Get the number of hunks in a patch
-	 */
-	size_t hunkCount()const;
-	
-	/**
-	 * Get line counts of each type in a patch.
-	 *
-	 * This helps imitate a diff --numstat type of output.  For that purpose,
-	 * you only need the `total_additions` and `total_deletions` values, but we
-	 * include the `total_context` line count in case you want the total number
-	 * of lines of diff output that will be generated.
-	 *
-	 * All outputs are optional. Pass NULL if you don't need a particular count.
-	 *
-	 * @param totalContext Count of context lines in output, can be NULL.
-	 * @param totalAdditions Count of addition lines in output, can be NULL.
-	 * @param totalDeletions Count of deletion lines in output, can be NULL.
-	 */
-	void lineStats(size_t *total_context, size_t *total_additions, size_t *total_deletions)const;
-	
-	/**
-	 * Get the information about a hunk in a patch
-	 *
-	 * Given a patch and a hunk index into the patch, this returns detailed
-	 * information about that hunk.  Any of the output pointers can be passed
-	 * as NULL if you don't care about that particular piece of information.
-	 * 
-	 * @param idx Input index of hunk to get information about
-	 * @param range Output pointer to git_diff_range of hunk
-	 * @param header Output pointer to header string for hunk.
-	 * @param linesInHunk Output count of total lines in this hunk
-	 * @param idx Input index of hunk to get information about
-	 * @return True if found, false if index is out of range.
-	 */
-	bool hunk(size_t idx, const git_diff_range **range = NULL, std::string* header = NULL, size_t *linesInHunk = NULL);
+// 	/**
+// 	 * Get the delta associated with a patch
+// 	 */
+// 	DiffDelta delta()const;
 
-	/**
-	 * Get the number of lines in a hunk.
-	 * 
-	 * @param idx Index of the hunk
-	 * @return Number of lines in hunk or -1 if invalid hunk index
-	 */
-	int hunkLineCount(size_t idx);
-	
-	/**
-	 * Get data about a line in a hunk of a patch.
-	 *
-	 * Given a patch, a hunk index, and a line index in the hunk, this
-	 * will return a lot of details about that line.  If you pass a hunk
-	 * index larger than the number of hunks or a line index larger than
-	 * the number of lines in the hunk, this will return -1.
-	 * 
-	 * @param idx The index of the hunk
-	 * @param line The index of the line in the hunk
-	 * @param[out] lineOrigin A GIT_DIFF_LINE constant from above
-	 * @param[out] content Content of diff line
-	 * @param[out] oldLineno Line number in old file or -1 if line is added
-	 * @param[out] newLineno Line number in new file or -1 if line is deleted
-	 */
-	void hunkLine(size_t idx, size_t line, char *lineOrigin, std::string* content, int *oldLineno, int *newLineno);
+// 	/**
+// 	 * Get the number of hunks in a patch
+// 	 */
+// 	size_t hunkCount()const;
 
-	/**
-	 * Serialize the patch to text via callback.
-	 * @return true if iterating completly, and false if terminated by user.
-	 */
-	bool print(DiffDataCallbackFunction callback);
+//     /**
+// 	 * Get line counts of each type in a patch.
+// 	 *
+// 	 * This helps imitate a diff --numstat type of output.  For that purpose,
+// 	 * you only need the `total_additions` and `total_deletions` values, but we
+// 	 * include the `total_context` line count in case you want the total number
+// 	 * of lines of diff output that will be generated.
+// 	 *
+// 	 * All outputs are optional. Pass NULL if you don't need a particular count.
+// 	 *
+// 	 * @param totalContext Count of context lines in output, can be NULL.
+// 	 * @param totalAdditions Count of addition lines in output, can be NULL.
+// 	 * @param totalDeletions Count of deletion lines in output, can be NULL.
+// 	 */
+// 	void lineStats(size_t *total_context, size_t *total_additions, size_t *total_deletions)const;
 
-};
+// 	/**
+// 	 * Get the information about a hunk in a patch
+// 	 *
+// 	 * Given a patch and a hunk index into the patch, this returns detailed
+// 	 * information about that hunk.  Any of the output pointers can be passed
+// 	 * as NULL if you don't care about that particular piece of information.
+// 	 *
+// 	 * @param idx Input index of hunk to get information about
+// 	 * @param range Output pointer to git_diff_hunk of hunk
+// 	 * @param header Output pointer to header string for hunk.
+// 	 * @param linesInHunk Output count of total lines in this hunk
+// 	 * @param idx Input index of hunk to get information about
+// 	 * @return True if found, false if index is out of range.
+// 	 */
+// 	bool hunk(size_t idx, const git_diff_hunk **range = NULL, std::string* header = NULL, size_t *linesInHunk = NULL);
+
+// 	/**
+// 	 * Get the number of lines in a hunk.
+// 	 *
+// 	 * @param idx Index of the hunk
+// 	 * @return Number of lines in hunk or -1 if invalid hunk index
+// 	 */
+// 	int hunkLineCount(size_t idx);
+
+// 	/**
+// 	 * Get data about a line in a hunk of a patch.
+// 	 *
+// 	 * Given a patch, a hunk index, and a line index in the hunk, this
+// 	 * will return a lot of details about that line.  If you pass a hunk
+// 	 * index larger than the number of hunks or a line index larger than
+// 	 * the number of lines in the hunk, this will return -1.
+// 	 *
+// 	 * @param idx The index of the hunk
+// 	 * @param line The index of the line in the hunk
+// 	 * @param[out] lineOrigin A GIT_DIFF_LINE constant from above
+// 	 * @param[out] content Content of diff line
+// 	 * @param[out] oldLineno Line number in old file or -1 if line is added
+// 	 * @param[out] newLineno Line number in new file or -1 if line is deleted
+// 	 */
+// 	void hunkLine(size_t idx, size_t line, char *lineOrigin, std::string* content, int *oldLineno, int *newLineno);
+
+// 	/**
+// 	 * Serialize the patch to text via callback.
+// 	 * @return true if iterating completly, and false if terminated by user.
+// 	 */
+// 	bool print(DiffDataCallbackFunction callback);
+
+// };
 
 
 // TODO wrap git_diff_similarity_metric
 // TODO wrap misc functions git_diff_blobs git_diff_patch_from_blobs git_diff_blob_to_buffer git_diff_patch_from_blob_and_buffer
- 
+
 
 
 } // namespace git2

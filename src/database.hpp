@@ -47,14 +47,14 @@ public:
 
 	~DatabaseBackend();
 
-	/**
-	 * Create a backend for loose objects.
-	 * 
-	 * @param objectsDir the Git repository's objects directory
-	 * @param compressionLevel zlib compression level to use
-	 * @param doFsync whether to do an fsync() after writing (currently ignored)
-	 */
-	static DatabaseBackend loose(const std::string& objectsDir, int compressionLevel, bool doFsync = false);
+	// /**
+	//  * Create a backend for loose objects.
+	//  * 
+	//  * @param objectsDir the Git repository's objects directory
+	//  * @param compressionLevel zlib compression level to use
+	//  * @param doFsync whether to do an fsync() after writing (currently ignored)
+	//  */
+	// static DatabaseBackend loose(const std::string& objectsDir, int compressionLevel, bool doFsync = false);
 
 	/**
 	 * Create a backend out of a single packfile.

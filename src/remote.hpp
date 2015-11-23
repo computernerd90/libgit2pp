@@ -2,17 +2,17 @@
 /*
  * libgit2pp
  * Copyright (C) 2013-2014 Émilien Kia <emilien.kia@gmail.com>
- * 
+ *
  * libgit2pp is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * libgit2pp is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
@@ -33,7 +33,7 @@ namespace git2
 
 class Exception;
 
-typedef std::function<bool(bool local, OId oid, OId loid, const std::string& name)> HeadListCallbackFunction;
+// typedef std::function<bool(bool local, OId oid, OId loid, const std::string& name)> HeadListCallbackFunction;
 
 typedef std::function<void(unsigned int total_objects, unsigned int indexed_objects, unsigned int received_objects, size_t received_bytes)> TransfertProgressCallbackFunction;
 
@@ -41,7 +41,7 @@ typedef std::function<void(const std::string& problematicRefspec)> RenameProblem
 
 /**
  * Represents a Git remote refspec.
- */ 
+ */
 class RefSpec
 {
 public:
@@ -69,7 +69,7 @@ public:
 	 * Get the refspec's string
 	 */
 	std::string str()const;
-	
+
 	/**
 	 * Get the force update setting
 	 */
@@ -77,7 +77,7 @@ public:
 
 	/**
 	 * Get the refspec's direction.
-	 * 
+	 *
 	 * @return GIT_DIRECTION_FETCH or GIT_DIRECTION_PUSH
 	 */
 	git_direction direction()const;
@@ -100,19 +100,19 @@ public:
 	 * @throws Exception
 	 */
 	std::string transform(const std::string& name)const;
-	 
+
 	 /**
 	  * Transform a target reference to its source reference following the refspec's rules
-	  * 
+	  *
 	  * @param name the name of the reference to transform
 	  * @return The source reference name.
 	  * @throws Exception
 	  */
 	std::string rtransform(const std::string& name)const;
-	  
-	 
+
+
 	const git_refspec *constData()const;
-	
+
 private:
 	const git_refspec *_refspec;
 };
@@ -120,14 +120,14 @@ private:
 
 /**
  * Represents a Git remote.
- */ 
+ */
 class Remote
 {
 public:
-    /**
-     * Constructor.
-     */
-    Remote(git_remote *remote = NULL);
+	/**
+	 * Constructor.
+	 */
+	Remote(git_remote *remote = NULL);
 
 	/**
 	 * Destructor.
@@ -139,7 +139,7 @@ public:
 	 *
 	 * @throws Exception
 	 */
-	void save();
+	// void save();
 
 	/**
 	 * Get the remote's name
@@ -157,20 +157,6 @@ public:
 	std::string pushUrl()const;
 
 	/**
-	 * Set the remote's url
-	 *
-	 * Existing connections will not be updated.
-	 */
-	void setUrl(const std::string& url);
-
-	/**
-	 * Set the remote's url for pushing
-	 *
-	 * Existing connections will not be updated.
-	 */
-	void setPushUrl(const std::string& url);
-
-	/**
 	 * Get the remote's list of fetch refspecs
 	 */
 	std::vector<std::string> getFetchRefspec();
@@ -185,40 +171,22 @@ public:
 	 *
 	 * Remove all configured fetch and push refspecs from the remote.
 	 */
-	void clearRefspec();
-	
+	// void clearRefspec();
+
 	/**
 	 * Get the number of refspecs for a remote
 	 */
 	size_t refspecCount()const;
-	
+
 	/**
 	 * Get a refspec from the remote
 	 */
 	RefSpec getRefspec(size_t n);
-	
+
 	/**
 	 * Remove a refspec from the remote
 	 */
-	void removeRefspec(size_t n);
-
-	/**
-	 * Add a fetch refspec to the remote.
-	 * 
-	 * Convenience function for adding a single fetch refspec to the current list in the remote.
-	 * 
-	 * @param refspec the new fetch refspec
-	 */
-	void addFetch(const std::string& refspec);
-
-	/**
-	 * Add a push refspec to the remote.
-	 * 
-	 * Convenience function for adding a single push refspec to the current list in the remote.
-	 * 
-	 * @param refspec the new push refspec
-	 */
-	void addPush(const std::string& refspec);
+	// void removeRefspec(size_t n);
 
 	/**
 	 * Open a connection to a remote
@@ -247,7 +215,7 @@ public:
 	 * transport.
 	 */
 	void disconnect();
-	
+
 	/**
 	 * Cancel the operation
 	 *
@@ -265,7 +233,7 @@ public:
 	 * If you a return false from the callback, this will stop
 	 * looping over the refs.
 	 */
-	bool list(HeadListCallbackFunction callback);
+	// bool list(HeadListCallbackFunction callback);
 
 	/**
 	 * Download the packfile
@@ -276,19 +244,19 @@ public:
 	 * was no packfile needed (all the objects were available locally),
 	 * filename will be NULL and the function will return success.
 	 */
-	void download(TransfertProgressCallbackFunction callback);
+	// void download(TransfertProgressCallbackFunction callback);
 
 	/**
 	 * Update the tips to the new state
 	 */
-	void UpdateTips();
-	
+	// void UpdateTips();
+
 	/**
 	 * Return whether a string is a valid remote URL
 	 *
 	 * @param tranport The url to check
 	 */
-	static bool isValidUrl(const std::string& url);
+	// static bool isValidUrl(const std::string& url);
 
 	/**
 	 * Return whether the passed URL is supported by this version of the library.
@@ -296,12 +264,12 @@ public:
 	 * @param tranport The url to check
 	 */
 	static bool isSupportedUrl(const std::string& url);
-	
+
 	/**
 	 * Choose whether to check the server's certificate (applies to HTTPS only)
 	 */
 	void checkCert(bool check);
-	
+
 	// TODO implement git_remote_set_cred_acquire_cb
 	// TODO implement git_remote_set_transport
 	// TODO implement git_remote_set_callbacks
@@ -310,51 +278,33 @@ public:
 	 * Get the statistics structure that is filled in by the fetch operation.
 	 */
 	const git_transfer_progress * stats();
-	
+
 	/**
 	 * Retrieve the tag auto-follow setting
 	 */
 	git_remote_autotag_option_t autotag()const;
-	
-	/**
-	 * Set the tag auto-follow setting
-	 */
-	void setAutotags(git_remote_autotag_option_t value);
-	
-	/**
-	 * Give the remote a new name
-	 *
-	 * All remote-tracking branches and configuration settings
-	 * for the remote are updated.
-	 *
-	 * The new name will be checked for validity.
-	 *
-	 * A temporary in-memory remote cannot be given a name with this method.
-	 */
-	void rename(const std::string& name, RenameProblemCallbackFunction callback);
-	
+
 	/**
 	 * Retrieve the update FETCH_HEAD setting.
 	 */
-	int updateFetchhead()const;
-	
+	// int updateFetchhead()const;
+
 	/**
 	 * Sets the update FETCH_HEAD setting.  By default, FETCH_HEAD will be
 	 * updated on every fetch.  Set to 0 to disable.
 	 */
-	void setUpdateFetchhead(int value);
-	
+	// void setUpdateFetchhead(int value);
+
 	/**
 	 * Ensure the remote name is well-formed.
 	 */
 	static bool isValidName(const std::string& name);
-	
+
 	git_remote* data() const;
-    const git_remote* constData() const;
+	const git_remote* constData() const;
 private:
 	git_remote *_remote;
 };
 
 } // namespace git2
 #endif // _GIT2PP_BLOB_HPP_
-

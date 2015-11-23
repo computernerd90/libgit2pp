@@ -2,17 +2,17 @@
 /*
  * libgit2pp
  * Copyright (C) 2013-2014 Émilien Kia <emilien.kia@gmail.com>
- * 
+ *
  * libgit2pp is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * libgit2pp is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
@@ -22,6 +22,7 @@
 #include "blob.hpp"
 #include "branch.hpp"
 #include "commit.hpp"
+#include "common.hpp"
 #include "config.hpp"
 #include "database.hpp"
 #include "exception.hpp"
@@ -66,8 +67,8 @@ _Class(other)
 
 std::string Repository::discover(const std::string& startPath, bool acrossFs, const std::list<std::string>& ceilingDirs)
 {
-	std::vector<char> repoPath((size_t)GIT_PATH_MAX, (char)0);
 	std::string joinedCeilingDirs;
+	git_buf* buffer;
 	if(!ceilingDirs.empty())
 	{
 		std::list<std::string>::const_iterator iter = ceilingDirs.begin();
@@ -78,17 +79,18 @@ std::string Repository::discover(const std::string& startPath, bool acrossFs, co
 			joinedCeilingDirs += *iter;
 		}
 	}
-	Exception::git2_assert(git_repository_discover(const_cast<char*>(repoPath.data()),
-									  repoPath.size(), startPath.c_str(),
-                                      acrossFs, joinedCeilingDirs.c_str()));
-    return std::string(repoPath.data());
+	Exception::git2_assert(git_repository_discover(buffer, startPath.c_str(),
+									  acrossFs, joinedCeilingDirs.c_str()));
+	std::string str(buffer->ptr, buffer->size);
+	git_buf_free(buffer);
+	return str;
 }
 
 Repository Repository::init(const std::string& path, bool isBare)
 {
-    git_repository *repo = NULL;
-    Exception::git2_assert(git_repository_init(&repo, path.c_str(), isBare));
-    return Repository(repo);
+	git_repository *repo = NULL;
+	Exception::git2_assert(git_repository_init(&repo, path.c_str(), isBare));
+	return Repository(repo);
 }
 
 Repository Repository::init(const std::string& path,
@@ -100,74 +102,74 @@ Repository Repository::init(const std::string& path,
 	const std::string& initialHead,
 	const std::string& originUrl)
 {
-    git_repository *repo = NULL;
-    
-    git_repository_init_options opts;
-    opts.version = GIT_REPOSITORY_INIT_OPTIONS_VERSION;
-    opts.flags   = flags;
-    opts.mode    = mode;
-    opts.workdir_path  = workdirPath.empty() ? NULL : workdirPath.c_str();
-    opts.description   = description.empty() ? NULL : description.c_str();
-    opts.template_path = templatePath.empty() ? NULL : templatePath.c_str();
-    opts.initial_head  = initialHead.empty() ? NULL : initialHead.c_str();
-    opts.origin_url    = originUrl.empty() ? NULL : originUrl.c_str();
-    
-    Exception::git2_assert(git_repository_init_ext(&repo, path.c_str(), &opts));
-    return Repository(repo);
+	git_repository *repo = NULL;
+
+	git_repository_init_options opts;
+	opts.version = GIT_REPOSITORY_INIT_OPTIONS_VERSION;
+	opts.flags   = flags;
+	opts.mode    = mode;
+	opts.workdir_path  = workdirPath.empty() ? NULL : workdirPath.c_str();
+	opts.description   = description.empty() ? NULL : description.c_str();
+	opts.template_path = templatePath.empty() ? NULL : templatePath.c_str();
+	opts.initial_head  = initialHead.empty() ? NULL : initialHead.c_str();
+	opts.origin_url    = originUrl.empty() ? NULL : originUrl.c_str();
+
+	Exception::git2_assert(git_repository_init_ext(&repo, path.c_str(), &opts));
+	return Repository(repo);
 }
 
 
 Repository Repository::open(const std::string& path)
 {
-    git_repository *repo = NULL;
-    Exception::git2_assert(git_repository_open(&repo, path.c_str()));
-    return Repository(repo);
+	git_repository *repo = NULL;
+	Exception::git2_assert(git_repository_open(&repo, path.c_str()));
+	return Repository(repo);
 }
 
 Repository Repository::discoverAndOpen(const std::string &startPath,
-                                     bool acrossFs,
-                                     const std::list<std::string> &ceilingDirs)
+									 bool acrossFs,
+									 const std::list<std::string> &ceilingDirs)
 {
-    return open(discover(startPath, acrossFs, ceilingDirs));
+	return open(discover(startPath, acrossFs, ceilingDirs));
 }
 
 Repository Repository::openBare(const std::string& path)
 {
-    git_repository *repo = NULL;
-    Exception::git2_assert(git_repository_open_bare(&repo, path.c_str()));
-    return Repository(repo);
+	git_repository *repo = NULL;
+	Exception::git2_assert(git_repository_open_bare(&repo, path.c_str()));
+	return Repository(repo);
 }
 
 Reference Repository::head() const
 {
-    git_reference *ref = NULL;
-    Exception::git2_assert(git_repository_head(&ref, data()));
-    return Reference(ref);
+	git_reference *ref = NULL;
+	Exception::git2_assert(git_repository_head(&ref, data()));
+	return Reference(ref);
 }
 
 bool Repository::isHeadDetached() const
 {
-    return Exception::git2_assert(git_repository_head_detached(data())) == 1;
+	return Exception::git2_assert(git_repository_head_detached(data())) == 1;
 }
 
-bool Repository::isHeadOrphan() const
+bool Repository::isHeadUnborn() const
 {
-    return Exception::git2_assert(git_repository_head_orphan(data())) == 1;
+	return Exception::git2_assert(git_repository_head_unborn(data())) == 1;
 }
 
 bool Repository::isEmpty() const
 {
-    return Exception::git2_assert(git_repository_is_empty(data())) == 1;
+	return Exception::git2_assert(git_repository_is_empty(data())) == 1;
 }
 
 bool Repository::isBare() const
 {
-    return Exception::git2_assert(git_repository_is_bare(data())) == 1;
+	return Exception::git2_assert(git_repository_is_bare(data())) == 1;
 }
 
 std::string Repository::name() const
 {
-    std::string repoPath = isBare() ? path() : workdir();
+	std::string repoPath = isBare() ? path() : workdir();
 	size_t pos = repoPath.rfind(GIT2PP_PATH_DIRECTORY_SEPARATOR);
 	if(pos==std::string::npos)
 		return repoPath;
@@ -179,12 +181,12 @@ std::string Repository::name() const
 
 std::string Repository::path() const
 {
-    return std::string(git_repository_path(data()));
+	return std::string(git_repository_path(data()));
 }
 
 std::string Repository::workdir() const
 {
-    return std::string(git_repository_workdir(data()));
+	return std::string(git_repository_workdir(data()));
 }
 
 void Repository::setWorkdir(const std::string& path, bool updateGitLink)
@@ -194,102 +196,102 @@ void Repository::setWorkdir(const std::string& path, bool updateGitLink)
 
 Config Repository::configuration() const
 {
-    git_config *cfg;
-    Exception::git2_assert( git_repository_config(&cfg, data()) );
-    return Config(cfg);
+	git_config *cfg;
+	Exception::git2_assert( git_repository_config(&cfg, data()) );
+	return Config(cfg);
 }
 
 Reference Repository::lookupReference(const std::string& name) const
 {
-    git_reference *ref = NULL;
-    Exception::git2_assert(git_reference_lookup(&ref, data(), name.c_str()));
-    return Reference(ref);
+	git_reference *ref = NULL;
+	Exception::git2_assert(git_reference_lookup(&ref, data(), name.c_str()));
+	return Reference(ref);
 }
 
 OId Repository::lookupReferenceOId(const std::string& name) const
 {
-    git_oid oid;
-    Exception::git2_assert(git_reference_name_to_id(&oid, data(), name.c_str()));
-    return OId(&oid);
+	git_oid oid;
+	Exception::git2_assert(git_reference_name_to_id(&oid, data(), name.c_str()));
+	return OId(&oid);
 }
 
 Reference Repository::lookupShorthandReference(const std::string& shorthand) const
 {
-    git_reference *ref = NULL;
-    Exception::git2_assert(git_reference_dwim(&ref, data(), shorthand.c_str()));
-    return Reference(ref);
+	git_reference *ref = NULL;
+	Exception::git2_assert(git_reference_dwim(&ref, data(), shorthand.c_str()));
+	return Reference(ref);
 }
 
 Commit Repository::lookupCommit(const OId& oid) const
 {
-    git_commit *commit = NULL;
-    Exception::git2_assert(git_commit_lookup_prefix(&commit, data(), oid.constData(), oid.length()));
-    return Commit(commit);
+	git_commit *commit = NULL;
+	Exception::git2_assert(git_commit_lookup_prefix(&commit, data(), oid.constData(), oid.length()));
+	return Commit(commit);
 }
 
 Branch Repository::lookupBranch(const std::string& branchName, git_branch_t branchType)
 {
-    git_reference *ref = NULL;
-    Exception::git2_assert(git_branch_lookup(&ref, data(), branchName.c_str(), branchType));
-    return Branch(ref);	
+	git_reference *ref = NULL;
+	Exception::git2_assert(git_branch_lookup(&ref, data(), branchName.c_str(), branchType));
+	return Branch(ref);
 }
 
 Tag Repository::lookupTag(const OId& oid) const
 {
-    git_tag *tag = NULL;
-    Exception::git2_assert(git_tag_lookup_prefix(&tag, data(), oid.constData(), oid.length()));
-    return Tag(tag);
+	git_tag *tag = NULL;
+	Exception::git2_assert(git_tag_lookup_prefix(&tag, data(), oid.constData(), oid.length()));
+	return Tag(tag);
 }
 
 Tree Repository::lookupTree(const OId& oid) const
 {
-    git_tree *tree = NULL;
-    Exception::git2_assert(git_tree_lookup_prefix(&tree, data(), oid.constData(), oid.length()));
-    return Tree(tree);
+	git_tree *tree = NULL;
+	Exception::git2_assert(git_tree_lookup_prefix(&tree, data(), oid.constData(), oid.length()));
+	return Tree(tree);
 }
 
 Blob Repository::lookupBlob(const OId& oid) const
 {
-    git_blob *blob = NULL;
-    Exception::git2_assert(git_blob_lookup_prefix(&blob, data(), oid.constData(), oid.length()));
-    return Blob(blob);
+	git_blob *blob = NULL;
+	Exception::git2_assert(git_blob_lookup_prefix(&blob, data(), oid.constData(), oid.length()));
+	return Blob(blob);
 }
 
 Object Repository::lookup(const OId &oid) const
 {
-    git_object *object = NULL;
-    Exception::git2_assert(git_object_lookup_prefix(&object, data(), oid.constData(), oid.length(), GIT_OBJ_ANY));
-    return Object(object);
+	git_object *object = NULL;
+	Exception::git2_assert(git_object_lookup_prefix(&object, data(), oid.constData(), oid.length(), GIT_OBJ_ANY));
+	return Object(object);
 }
 
 Reference Repository::createReference(const std::string& name, const OId& id, bool force)
 {
-    git_reference *ref = NULL;
-    Exception::git2_assert(git_reference_create(&ref, data(), name.c_str(), id.constData(), force?1:0));
-    return Reference(ref);
+	git_reference *ref = NULL;
+	Exception::git2_assert(git_reference_create(&ref, data(), name.c_str(), id.constData(), force?1:0, ""));
+	return Reference(ref);
 }
 
 Reference Repository::createSymbolicReference(const std::string& name, const std::string& target, bool force)
 {
 	git_reference *ref;
-	Exception::git2_assert(git_reference_symbolic_create(&ref, data(), name.c_str(), target.c_str(), force?1:0));
+	Exception::git2_assert(git_reference_symbolic_create(&ref, data(), name.c_str(), target.c_str(), force?1:0, ""));
 	return Reference(ref);
 }
 
 OId Repository::createCommit(const std::string& ref,
-                                     const Signature& author,
-                                     const Signature& committer,
-                                     const std::string& message,
-                                     const Tree& tree,
-                                     const std::list<Commit>& parents)
+									 const Signature& author,
+									 const Signature& committer,
+									 const std::string& message,
+									 const Tree& tree,
+									 const std::list<Commit>& parents)
 {
-    std::vector<const git_commit*> p;
+	std::vector<const git_commit*> p;
 	for(const Commit& parent : parents)
 		p.push_back(parent.data());
 
-    OId oid;
-    Exception::git2_assert(git_commit_create(oid.data(), data(), ref.c_str(), author.data(), committer.data(), NULL, message.c_str(), tree.data(), p.size(), p.data()));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_commit_create(oid.data(), data(), ref.c_str(), author.data(), committer.data(), NULL, message.c_str(), tree.data(), p.size(), p.data()));
+	return oid;
 }
 
 OId Repository::createCommit(const std::string& ref,
@@ -300,13 +302,13 @@ OId Repository::createCommit(const std::string& ref,
 					 const Tree& tree,
 					 const std::list<Commit>& parents)
 {
-    std::vector<const git_commit*> p;
+	std::vector<const git_commit*> p;
 	for(const Commit& parent : parents)
 		p.push_back(parent.data());
 
-    OId oid;
-    Exception::git2_assert(git_commit_create(oid.data(), data(), ref.c_str(), author.data(), committer.data(), messageEncoding.c_str(), message.c_str(), tree.data(), p.size(), p.data()));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_commit_create(oid.data(), data(), ref.c_str(), author.data(), committer.data(), messageEncoding.c_str(), message.c_str(), tree.data(), p.size(), p.data()));
+	return oid;
 }
 
 Branch Repository::createBranch(const std::string& branchName, const Commit& target, bool force)
@@ -317,96 +319,96 @@ Branch Repository::createBranch(const std::string& branchName, const Commit& tar
 }
 
 OId Repository::createTag(const std::string& name,
-                                  const Object& target,
-                                  bool overwrite)
+								  const Object& target,
+								  bool overwrite)
 {
-    OId oid;
-    Exception::git2_assert(git_tag_create_lightweight(oid.data(), data(), name.c_str(),
-                                         target.data(), overwrite));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_tag_create_lightweight(oid.data(), data(), name.c_str(),
+										 target.data(), overwrite));
+	return oid;
 }
 
 OId Repository::createTag(const std::string& name,
-                                  const Object& target,
-                                  const Signature& tagger,
-                                  const std::string& message,
-                                  bool overwrite)
+								  const Object& target,
+								  const Signature& tagger,
+								  const std::string& message,
+								  bool overwrite)
 {
-    OId oid;
-    Exception::git2_assert(git_tag_create(oid.data(), data(), name.c_str(), target.data(),
-                             tagger.data(), message.c_str(), overwrite));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_tag_create(oid.data(), data(), name.c_str(), target.data(),
+							 tagger.data(), message.c_str(), overwrite));
+	return oid;
 }
 
 void Repository::deleteTag(const std::string& name)
 {
-    Exception::git2_assert(git_tag_delete(data(), name.c_str()));
+	Exception::git2_assert(git_tag_delete(data(), name.c_str()));
 }
 
 OId Repository::createBlobFromDisk(const std::string& path)
 {
-    OId oid;
-    Exception::git2_assert(git_blob_create_fromdisk(oid.data(), data(), path.c_str()));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_blob_create_fromdisk(oid.data(), data(), path.c_str()));
+	return oid;
 }
 
 OId Repository::createBlobFromDisk(const char* path)
 {
-    OId oid;
-    Exception::git2_assert(git_blob_create_fromdisk(oid.data(), data(), path));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_blob_create_fromdisk(oid.data(), data(), path));
+	return oid;
 }
 
 
 OId Repository::createBlobFromBuffer(const std::vector<unsigned char>& buffer)
 {
-    OId oid;
-    Exception::git2_assert(git_blob_create_frombuffer(oid.data(), data(), buffer.data(), buffer.size()));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_blob_create_frombuffer(oid.data(), data(), buffer.data(), buffer.size()));
+	return oid;
 }
 
 OId Repository::createBlobFromBuffer(const void* buffer, size_t len)
 {
-    OId oid;
-    Exception::git2_assert(git_blob_create_frombuffer(oid.data(), data(), buffer, len));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_blob_create_frombuffer(oid.data(), data(), buffer, len));
+	return oid;
 }
 
 OId Repository::createBlobFromWorkdir(const std::string& relativePath)
 {
-    OId oid;
-    Exception::git2_assert(git_blob_create_fromworkdir(oid.data(), data(), relativePath.c_str()));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_blob_create_fromworkdir(oid.data(), data(), relativePath.c_str()));
+	return oid;
 }
 
 OId Repository::createBlobFromWorkdir(const char* relativePath)
 {
-    OId oid;
-    Exception::git2_assert(git_blob_create_fromworkdir(oid.data(), data(), relativePath));
-    return oid;
+	OId oid;
+	Exception::git2_assert(git_blob_create_fromworkdir(oid.data(), data(), relativePath));
+	return oid;
 }
 
 std::list<std::string> Repository::listTags(const std::string& pattern) const
 {
-    std::list<std::string> list;
-    git_strarray tags;
+	std::list<std::string> list;
+	git_strarray tags;
 	if(pattern.empty())
 		Exception::git2_assert(git_tag_list(&tags, data()));
 	else
-	    Exception::git2_assert(git_tag_list_match(&tags, pattern.c_str(), data()));
+		Exception::git2_assert(git_tag_list_match(&tags, pattern.c_str(), data()));
 	helper::push_back(list, &tags);
-    git_strarray_free(&tags);
-    return list;
+	git_strarray_free(&tags);
+	return list;
 }
 
 std::list<std::string> Repository::listReferences() const
 {
-    std::list<std::string> list;
-    git_strarray refs;
-    Exception::git2_assert(git_reference_list(&refs, data()));
-    helper::push_back(list, &refs);
-    git_strarray_free(&refs);
-    return list;
+	std::list<std::string> list;
+	git_strarray refs;
+	Exception::git2_assert(git_reference_list(&refs, data()));
+	helper::push_back(list, &refs);
+	git_strarray_free(&refs);
+	return list;
 }
 
 bool Repository::foreachReference(std::function<bool(Reference)> callback)
@@ -440,16 +442,16 @@ bool Repository::foreachReferenceName(std::function<bool(const std::string&)> ca
 
 Database Repository::database() const
 {
-    git_odb *odb;
-    Exception::git2_assert( git_repository_odb(&odb, data()) );
-    return Database(odb);
+	git_odb *odb;
+	Exception::git2_assert( git_repository_odb(&odb, data()) );
+	return Database(odb);
 }
 
 Index Repository::index() const
 {
-    git_index *idx;
-    Exception::git2_assert(git_repository_index(&idx, data()));
-    return Index(idx);
+	git_index *idx;
+	Exception::git2_assert(git_repository_index(&idx, data()));
+	return Index(idx);
 }
 
 /*
@@ -469,9 +471,11 @@ OId Repository::writeIndexTree(Index& index)
 
 std::string Repository::message()const
 {
-	char buffer[4096];
-	Exception::git2_assert(git_repository_message(buffer, 4096, data()));
-	return std::string(buffer);
+	git_buf* buffer;
+	Exception::git2_assert(git_repository_message(buffer, data()));
+	std::string str(buffer->ptr, buffer->size);
+	git_buf_free(buffer);
+	return str;
 }
 
 void Repository::removeMessage()
@@ -489,7 +493,7 @@ bool Repository::statusForeach(StatusCallbackFunction callback)
 		else
 			return 0;
 	};
-	
+
 	int res = git_status_foreach(data(), status_cb, (void*)&callback);
 	if(res==GIT_OK)
 		return true;
@@ -509,15 +513,15 @@ bool Repository::statusForeach(StatusCallbackFunction callback, git_status_show_
 		else
 			return 0;
 	};
-	
-	git_status_options opts = 
+
+	git_status_options opts =
 	{
 		GIT_STATUS_OPTIONS_VERSION,
 		show, flags,
 		{}
 	};
 	helper::StrArrayFiller<std::vector<std::string>> filler(&opts.pathspec, pathspec);
-	
+
 	int res = git_status_foreach_ext(data(), &opts, status_cb, (void*)&callback);
 	if(res==GIT_OK)
 		return true;
@@ -536,7 +540,7 @@ Status Repository::status(const std::string& path)
 
 StatusList Repository::listStatus(git_status_show_t show, unsigned int flags, const std::vector<std::string>& pathspec)
 {
-	git_status_options opts = 
+	git_status_options opts =
 	{
 		GIT_STATUS_OPTIONS_VERSION,
 		show, flags,
@@ -555,58 +559,64 @@ Remote* Repository::createRemote(const std::string& name, const std::string& url
 	return new Remote(remote);
 }
 
-Remote* Repository::createMemoryRemote(const std::string& fetch, const std::string& url)
-{
-	git_remote *remote;
-	Exception::git2_assert(git_remote_create_inmemory(&remote, data(), fetch.c_str(), url.c_str()));
-	return new Remote(remote);
-}
+// Remote* Repository::createMemoryRemote(const std::string& fetch, const std::string& url)
+// {
+// 	git_remote *remote;
+// 	Exception::git2_assert(git_remote_create_inmemory(&remote, data(), fetch.c_str(), url.c_str()));
+// 	return new Remote(remote);
+// }
 
 Remote* Repository::getRemote(const std::string& name)
 {
 	git_remote *remote;
-	Exception::git2_assert(git_remote_load(&remote, data(), name.c_str()));
+	Exception::git2_assert(git_remote_lookup(&remote, data(), name.c_str()));
 	return new Remote(remote);
 }
 
 std::vector<std::string> Repository::listRemote()
 {
-    std::vector<std::string> list;
-    git_strarray repos;
-    Exception::git2_assert(git_remote_list(&repos, data()));
-    helper::push_back(list, &repos);
-    git_strarray_free(&repos);
-    return list;
+	std::vector<std::string> list;
+	git_strarray repos;
+	Exception::git2_assert(git_remote_list(&repos, data()));
+	helper::push_back(list, &repos);
+	git_strarray_free(&repos);
+	return list;
 }
 
 std::string Repository::getBranchUpstreamName(const std::string& canonicalBranchName)
 {
-	char buffer[GIT_PATH_MAX];
-	int res = git_branch_upstream_name(buffer, GIT_PATH_MAX, data(), canonicalBranchName.c_str());
+	git_buf* buffer;
+	std::string str;
+	int res = git_branch_upstream_name(buffer, data(), canonicalBranchName.c_str());
 	if(res==GIT_ENOTFOUND)
-		return "";
+		str = "";
 	else if(res>0)
-		return std::string(buffer, res-1);
+		str = std::string(buffer->ptr, buffer->size);
 	else
 	{
 		Exception::git2_assert(res);
-		return "";
+		str = "";
 	}
+	git_buf_free(buffer);
+	return str;
 }
 
 std::string Repository::getBranchRemoteName(const std::string& canonicalBranchName)
 {
-	char buffer[GIT_PATH_MAX];
-	int res = git_branch_remote_name(buffer, GIT_PATH_MAX, data(), canonicalBranchName.c_str());
+	git_buf* buffer;
+	std::string str;
+	int res = git_branch_remote_name(buffer, data(), canonicalBranchName.c_str());
 	if(res==GIT_ENOTFOUND)
-		return "";
+		str = "";
 	else if(res>0)
-		return std::string(buffer, res-1);
+		str = std::string(buffer->ptr, buffer->size);
 	else
 	{
 		Exception::git2_assert(res);
-		return "";
+		str = "";
 	}
+	git_buf_free(buffer);
+	return str;
 }
 
 RevWalk Repository::createRevWalk()
@@ -640,17 +650,17 @@ bool Repository::isIgnored(const std::string& path)
 	return res!=0;
 }
 
-void Repository::cleanupMerge()
-{
-	Exception::git2_assert(git_repository_merge_cleanup(data()));
-}
+// void Repository::cleanupMerge()
+// {
+// 	Exception::git2_assert(git_repository_merge_cleanup(data()));
+// }
 
 OId Repository::hashFile(const std::string& path, git_otype type, const std::string& asPath)
 {
 	git_oid out;
 	Exception::git2_assert(git_repository_hashfile(&out, data(),
 		path.empty()?NULL:path.c_str(), type, asPath.empty()?NULL:asPath.c_str()));
-		
+
 	return OId(&out);
 }
 
@@ -688,7 +698,8 @@ std::string Repository::getNamespace()
 
 void Repository::reset(Object& target, git_reset_t resetType)
 {
-	Exception::git2_assert(git_reset(data(), target.data(), resetType));
+	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+	Exception::git2_assert(git_reset(data(), target.data(), resetType, &opts));
 }
 
 void Repository::resetDefault(Object* target, const std::vector<std::string> pathspecs)
@@ -707,221 +718,221 @@ bool Repository::shallow()const
 	return git_repository_is_shallow(data())!=0;
 }
 
-DiffList Repository::diffTreeToTree(Tree oldTree, Tree newTree)
-{
-	git_diff_list *diff;
-	Exception::git2_assert(git_diff_tree_to_tree(&diff, data(), oldTree.data(), newTree.data(), NULL));
-	return DiffList(diff);
-}
+// DiffList Repository::diffTreeToTree(Tree oldTree, Tree newTree)
+// {
+// 	git_diff_list *diff;
+// 	Exception::git2_assert(git_diff_tree_to_tree(&diff, data(), oldTree.data(), newTree.data(), NULL));
+// 	return DiffList(diff);
+// }
 
-DiffList Repository::diffTreeToTree(Tree oldTree, Tree newTree, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
-		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
-		DiffNotifyCallbackFunction notify)
-{
-	git_diff_options options = {
-		GIT_DIFF_OPTIONS_VERSION,
-		flags,
-		contextLines,
-		interhunkLines,
-		oldPrefix.c_str(),
-		newPrefix.c_str(),
-		{
-			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
-			pathspec.size()
-		},
-		maxSize,
-		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
-		{
-			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
-			if(callback!=nullptr)
-				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
-			else
-				return 0;
-		},
-		(void*)&notify
-	};
-	if(pathspec.size()>0)
-	{
-		for(size_t n=0; n<pathspec.size(); ++n)
-		{
-			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
-		}
-	}
-	
-	git_diff_list *diff;
-	int res = git_diff_tree_to_tree(&diff, data(), oldTree.data(), newTree.data(), &options);
-	
-	if(pathspec.size()>0)
-	{
-		delete options.pathspec.strings;
-	}
-	
-	Exception::git2_assert(res);
-	return DiffList(diff);
-}
+// DiffList Repository::diffTreeToTree(Tree oldTree, Tree newTree, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
+// 		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
+// 		DiffNotifyCallbackFunction notify)
+// {
+// 	git_diff_options options = {
+// 		GIT_DIFF_OPTIONS_VERSION,
+// 		flags,
+// 		contextLines,
+// 		interhunkLines,
+// 		oldPrefix.c_str(),
+// 		newPrefix.c_str(),
+// 		{
+// 			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
+// 			pathspec.size()
+// 		},
+// 		maxSize,
+// 		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
+// 		{
+// 			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
+// 			if(callback!=nullptr)
+// 				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
+// 			else
+// 				return 0;
+// 		},
+// 		(void*)&notify
+// 	};
+// 	if(pathspec.size()>0)
+// 	{
+// 		for(size_t n=0; n<pathspec.size(); ++n)
+// 		{
+// 			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
+// 		}
+// 	}
 
-DiffList Repository::diffTreeToIndex(Tree oldTree, Index index)
-{
-	git_diff_list *diff;
-	Exception::git2_assert(git_diff_tree_to_index(&diff, data(), oldTree.data(), index.data(), NULL));
-	return DiffList(diff);
-}
+// 	git_diff_list *diff;
+// 	int res = git_diff_tree_to_tree(&diff, data(), oldTree.data(), newTree.data(), &options);
 
-DiffList Repository::diffTreeToIndex(Tree oldTree, Index index, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
-		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
-		DiffNotifyCallbackFunction notify)
-{
-	git_diff_options options = {
-		GIT_DIFF_OPTIONS_VERSION,
-		flags,
-		contextLines,
-		interhunkLines,
-		oldPrefix.c_str(),
-		newPrefix.c_str(),
-		{
-			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
-			pathspec.size()
-		},
-		maxSize,
-		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
-		{
-			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
-			if(callback!=nullptr)
-				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
-			else
-				return 0;
-		},
-		(void*)&notify
-	};
-	if(pathspec.size()>0)
-	{
-		for(size_t n=0; n<pathspec.size(); ++n)
-		{
-			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
-		}
-	}
-	
-	git_diff_list *diff;
-	int res = git_diff_tree_to_index(&diff, data(), oldTree.data(), index.data(), &options);
-	
-	if(pathspec.size()>0)
-	{
-		delete options.pathspec.strings;
-	}
-	
-	Exception::git2_assert(res);
-	return DiffList(diff);
-}
+// 	if(pathspec.size()>0)
+// 	{
+// 		delete options.pathspec.strings;
+// 	}
 
-DiffList Repository::diffIndexToWorkdir(Index index)
-{
-	git_diff_list *diff;
-	Exception::git2_assert(git_diff_index_to_workdir(&diff, data(), index.data(), NULL));
-	return DiffList(diff);
-}
+// 	Exception::git2_assert(res);
+// 	return DiffList(diff);
+// }
+
+// DiffList Repository::diffTreeToIndex(Tree oldTree, Index index)
+// {
+// 	git_diff_list *diff;
+// 	Exception::git2_assert(git_diff_tree_to_index(&diff, data(), oldTree.data(), index.data(), NULL));
+// 	return DiffList(diff);
+// }
+
+// DiffList Repository::diffTreeToIndex(Tree oldTree, Index index, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
+// 		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
+// 		DiffNotifyCallbackFunction notify)
+// {
+// 	git_diff_options options = {
+// 		GIT_DIFF_OPTIONS_VERSION,
+// 		flags,
+// 		contextLines,
+// 		interhunkLines,
+// 		oldPrefix.c_str(),
+// 		newPrefix.c_str(),
+// 		{
+// 			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
+// 			pathspec.size()
+// 		},
+// 		maxSize,
+// 		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
+// 		{
+// 			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
+// 			if(callback!=nullptr)
+// 				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
+// 			else
+// 				return 0;
+// 		},
+// 		(void*)&notify
+// 	};
+// 	if(pathspec.size()>0)
+// 	{
+// 		for(size_t n=0; n<pathspec.size(); ++n)
+// 		{
+// 			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
+// 		}
+// 	}
+
+// 	git_diff_list *diff;
+// 	int res = git_diff_tree_to_index(&diff, data(), oldTree.data(), index.data(), &options);
+
+// 	if(pathspec.size()>0)
+// 	{
+// 		delete options.pathspec.strings;
+// 	}
+
+// 	Exception::git2_assert(res);
+// 	return DiffList(diff);
+// }
+
+// DiffList Repository::diffIndexToWorkdir(Index index)
+// {
+// 	git_diff_list *diff;
+// 	Exception::git2_assert(git_diff_index_to_workdir(&diff, data(), index.data(), NULL));
+// 	return DiffList(diff);
+// }
 
 
-DiffList Repository::diffIndexToWorkdir(Index index, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
-		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
-		DiffNotifyCallbackFunction notify)
-{
-	git_diff_options options = {
-		GIT_DIFF_OPTIONS_VERSION,
-		flags,
-		contextLines,
-		interhunkLines,
-		oldPrefix.c_str(),
-		newPrefix.c_str(),
-		{
-			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
-			pathspec.size()
-		},
-		maxSize,
-		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
-		{
-			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
-			if(callback!=nullptr)
-				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
-			else
-				return 0;
-		},
-		(void*)&notify
-	};
-	if(pathspec.size()>0)
-	{
-		for(size_t n=0; n<pathspec.size(); ++n)
-		{
-			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
-		}
-	}
-	
-	git_diff_list *diff;
-	int res = git_diff_index_to_workdir(&diff, data(), index.data(), &options);
-	
-	if(pathspec.size()>0)
-	{
-		delete options.pathspec.strings;
-	}
-	
-	Exception::git2_assert(res);
-	return DiffList(diff);
-}
+// DiffList Repository::diffIndexToWorkdir(Index index, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
+// 		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
+// 		DiffNotifyCallbackFunction notify)
+// {
+// 	git_diff_options options = {
+// 		GIT_DIFF_OPTIONS_VERSION,
+// 		flags,
+// 		contextLines,
+// 		interhunkLines,
+// 		oldPrefix.c_str(),
+// 		newPrefix.c_str(),
+// 		{
+// 			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
+// 			pathspec.size()
+// 		},
+// 		maxSize,
+// 		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
+// 		{
+// 			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
+// 			if(callback!=nullptr)
+// 				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
+// 			else
+// 				return 0;
+// 		},
+// 		(void*)&notify
+// 	};
+// 	if(pathspec.size()>0)
+// 	{
+// 		for(size_t n=0; n<pathspec.size(); ++n)
+// 		{
+// 			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
+// 		}
+// 	}
 
-DiffList Repository::diffTreeToWorkdir(Tree oldTree)
-{
-	git_diff_list *diff;
-	Exception::git2_assert(git_diff_tree_to_workdir(&diff, data(), oldTree.data(), NULL));
-	return DiffList(diff);
-}
+// 	git_diff_list *diff;
+// 	int res = git_diff_index_to_workdir(&diff, data(), index.data(), &options);
 
-DiffList Repository::diffTreeToWorkdir(Tree oldTree, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
-		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
-		DiffNotifyCallbackFunction notify)
-{
-	git_diff_options options = {
-		GIT_DIFF_OPTIONS_VERSION,
-		flags,
-		contextLines,
-		interhunkLines,
-		oldPrefix.c_str(),
-		newPrefix.c_str(),
-		{
-			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
-			pathspec.size()
-		},
-		maxSize,
-		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
-		{
-			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
-			if(callback!=nullptr)
-				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
-			else
-				return 0;
-		},
-		(void*)&notify
-	};
-	if(pathspec.size()>0)
-	{
-		for(size_t n=0; n<pathspec.size(); ++n)
-		{
-			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
-		}
-	}
-	
-	git_diff_list *diff;
-	int res = git_diff_tree_to_workdir(&diff, data(), oldTree.data(), &options);
-	
-	if(pathspec.size()>0)
-	{
-		delete options.pathspec.strings;
-	}
-	
-	Exception::git2_assert(res);
-	return DiffList(diff);
-}
+// 	if(pathspec.size()>0)
+// 	{
+// 		delete options.pathspec.strings;
+// 	}
 
-void Repository::checkoutHead(unsigned int strategy, bool disableFilters, 
-		unsigned int dirMode, unsigned int fileMode, 
+// 	Exception::git2_assert(res);
+// 	return DiffList(diff);
+// }
+
+// DiffList Repository::diffTreeToWorkdir(Tree oldTree)
+// {
+// 	git_diff_list *diff;
+// 	Exception::git2_assert(git_diff_tree_to_workdir(&diff, data(), oldTree.data(), NULL));
+// 	return DiffList(diff);
+// }
+
+// DiffList Repository::diffTreeToWorkdir(Tree oldTree, uint32_t flags, uint16_t contextLines, uint16_t interhunkLines,
+// 		const std::string& oldPrefix , const std::string& newPrefix, const std::vector<std::string>& pathspec, git_off_t maxSize,
+// 		DiffNotifyCallbackFunction notify)
+// {
+// 	git_diff_options options = {
+// 		GIT_DIFF_OPTIONS_VERSION,
+// 		flags,
+// 		contextLines,
+// 		interhunkLines,
+// 		oldPrefix.c_str(),
+// 		newPrefix.c_str(),
+// 		{
+// 			pathspec.size()>0 ? new char*[pathspec.size()] : NULL,
+// 			pathspec.size()
+// 		},
+// 		maxSize,
+// 		[](const git_diff_list *diff_so_far, const git_diff_delta *delta_to_add, const char *matched_pathspec, void *payload)->int
+// 		{
+// 			DiffNotifyCallbackFunction* callback = (DiffNotifyCallbackFunction*)payload;
+// 			if(callback!=nullptr)
+// 				return (*callback)(DiffList(const_cast<git_diff_list*>(diff_so_far)), DiffDelta(const_cast<git_diff_delta*>(delta_to_add)), std::string(matched_pathspec));
+// 			else
+// 				return 0;
+// 		},
+// 		(void*)&notify
+// 	};
+// 	if(pathspec.size()>0)
+// 	{
+// 		for(size_t n=0; n<pathspec.size(); ++n)
+// 		{
+// 			options.pathspec.strings[n] = const_cast<char*>(pathspec[n].data());
+// 		}
+// 	}
+
+// 	git_diff_list *diff;
+// 	int res = git_diff_tree_to_workdir(&diff, data(), oldTree.data(), &options);
+
+// 	if(pathspec.size()>0)
+// 	{
+// 		delete options.pathspec.strings;
+// 	}
+
+// 	Exception::git2_assert(res);
+// 	return DiffList(diff);
+// }
+
+void Repository::checkoutHead(unsigned int strategy, bool disableFilters,
+		unsigned int dirMode, unsigned int fileMode,
 		int fileOpenFlags, unsigned int notifyFlags,
 		CheckoutNotifyCallbackFunction notifyCb,
 		CheckoutProgressCallbackFunction progressCb,
@@ -940,38 +951,54 @@ void Repository::checkoutHead(unsigned int strategy, bool disableFilters,
 		else
 			return 0;
 	};
-	
+
 	auto progress_cb = [](const char *path, size_t completed_steps, size_t total_steps, void *payload)
 	{
 		CheckoutProgressCallbackFunction* cb = (CheckoutProgressCallbackFunction*)payload;
 		if(cb!=nullptr)
 			(*cb)(path, completed_steps, total_steps);
 	};
-	
-	git_checkout_opts opts = {
-		GIT_CHECKOUT_OPTS_VERSION,
-		strategy,
-		disableFilters ? 1 :  0,
-		dirMode,
-		fileMode,
-		fileOpenFlags,
-		notifyFlags,
-		notify_cb,
-		(void*)&notifyCb,
-		progress_cb,
-		(void*)&progressCb,
-		{},
-		baseline.ok() ? baseline.data() : nullptr,
-		targetDirectory.c_str()
-	};
+
+	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+
+	opts.checkout_strategy = strategy;
+	opts.disable_filters = disableFilters ? 1 : 0;
+	opts.dir_mode = dirMode;
+	opts.file_mode = fileMode;
+	opts.file_open_flags = fileOpenFlags;
+	opts.notify_flags = notifyFlags;
+	opts.notify_cb = notify_cb;
+	opts.notify_payload = (void*) &notifyCb;
+	opts.progress_cb = progress_cb;
+	opts.progress_payload = (void*) &progressCb;
+	opts.paths = {};
+	opts.baseline = baseline.ok() ? baseline.data() : nullptr;
+	opts.target_directory = targetDirectory.c_str();
+
+	// git_checkout_options opts = {
+	// 	GIT_CHECKOUT_OPTIONS_VERSION,
+	// 	strategy,
+	// 	disableFilters ? 1 :  0,
+	// 	dirMode,
+	// 	fileMode,
+	// 	fileOpenFlags,
+	// 	notifyFlags,
+	// 	notify_cb,
+	// 	(void*)&notifyCb,
+	// 	progress_cb,
+	// 	(void*)&progressCb,
+	// 	{},
+	// 	baseline.ok() ? baseline.data() : nullptr,
+	// 	targetDirectory.c_str()
+	// };
 	helper::StrArrayFiller<std::vector<std::string>> filler(&opts.paths, paths);
-	
-	Exception::git2_assert(git_checkout_head(data(), &opts));	
+
+	Exception::git2_assert(git_checkout_head(data(), &opts));
 }
 
 void Repository::checkoutIndex(Index index,
-		unsigned int strategy, bool disableFilters, 
-		unsigned int dirMode, unsigned int fileMode, 
+		unsigned int strategy, bool disableFilters,
+		unsigned int dirMode, unsigned int fileMode,
 		int fileOpenFlags, unsigned int notifyFlags,
 		CheckoutNotifyCallbackFunction notifyCb,
 		CheckoutProgressCallbackFunction progressCb,
@@ -990,39 +1017,54 @@ void Repository::checkoutIndex(Index index,
 		else
 			return 0;
 	};
-	
+
 	auto progress_cb = [](const char *path, size_t completed_steps, size_t total_steps, void *payload)
 	{
 		CheckoutProgressCallbackFunction* cb = (CheckoutProgressCallbackFunction*)payload;
 		if(cb!=nullptr)
 			(*cb)(path, completed_steps, total_steps);
 	};
-	
-	git_checkout_opts opts = {
-		GIT_CHECKOUT_OPTS_VERSION,
-		strategy,
-		disableFilters ? 1 :  0,
-		dirMode,
-		fileMode,
-		fileOpenFlags,
-		notifyFlags,
-		notify_cb,
-		(void*)&notifyCb,
-		progress_cb,
-		(void*)&progressCb,
-		{},
-		baseline.ok() ? baseline.data() : nullptr,
-		targetDirectory.c_str()
-	};
+
+	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+
+	opts.checkout_strategy = strategy;
+	opts.disable_filters = disableFilters ? 1 : 0;
+	opts.dir_mode = dirMode;
+	opts.file_mode = fileMode;
+	opts.file_open_flags = fileOpenFlags;
+	opts.notify_flags = notifyFlags;
+	opts.notify_cb = notify_cb;
+	opts.notify_payload = (void*) &notifyCb;
+	opts.progress_cb = progress_cb;
+	opts.progress_payload = (void*) &progressCb;
+	opts.paths = {};
+	opts.baseline = baseline.ok() ? baseline.data() : nullptr;
+	opts.target_directory = targetDirectory.c_str();
+
+    // git_checkout_opts opts = {
+	// 	GIT_CHECKOUT_OPTS_VERSION,
+	// 	strategy,
+	// 	disableFilters ? 1 :  0,
+	// 	dirMode,
+	// 	fileMode,
+	// 	fileOpenFlags,
+	// 	notifyFlags,
+	// 	notify_cb,
+	// 	(void*)&notifyCb,
+	// 	progress_cb,
+	// 	(void*)&progressCb,
+	// 	{},
+	// 	baseline.ok() ? baseline.data() : nullptr,
+	// 	targetDirectory.c_str()
+	// };
 	helper::StrArrayFiller<std::vector<std::string>> filler(&opts.paths, paths);
-	
-	Exception::git2_assert(git_checkout_index(data(), index.data(), &opts));	
+
+	Exception::git2_assert(git_checkout_index(data(), index.data(), &opts));
 }
 
-
 void Repository::checkoutTree(Object treeish,
-		unsigned int strategy, bool disableFilters, 
-		unsigned int dirMode, unsigned int fileMode, 
+		unsigned int strategy, bool disableFilters,
+		unsigned int dirMode, unsigned int fileMode,
 		int fileOpenFlags, unsigned int notifyFlags,
 		CheckoutNotifyCallbackFunction notifyCb,
 		CheckoutProgressCallbackFunction progressCb,
@@ -1041,39 +1083,55 @@ void Repository::checkoutTree(Object treeish,
 		else
 			return 0;
 	};
-	
+
 	auto progress_cb = [](const char *path, size_t completed_steps, size_t total_steps, void *payload)
 	{
 		CheckoutProgressCallbackFunction* cb = (CheckoutProgressCallbackFunction*)payload;
 		if(cb!=nullptr)
 			(*cb)(path, completed_steps, total_steps);
 	};
-	
-	git_checkout_opts opts = {
-		GIT_CHECKOUT_OPTS_VERSION,
-		strategy,
-		disableFilters ? 1 :  0,
-		dirMode,
-		fileMode,
-		fileOpenFlags,
-		notifyFlags,
-		notify_cb,
-		(void*)&notifyCb,
-		progress_cb,
-		(void*)&progressCb,
-		{},
-		baseline.ok() ? baseline.data() : nullptr,
-		targetDirectory.c_str()
-	};
+
+	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+
+	opts.checkout_strategy = strategy;
+	opts.disable_filters = disableFilters ? 1 : 0;
+	opts.dir_mode = dirMode;
+	opts.file_mode = fileMode;
+	opts.file_open_flags = fileOpenFlags;
+	opts.notify_flags = notifyFlags;
+	opts.notify_cb = notify_cb;
+	opts.notify_payload = (void*) &notifyCb;
+	opts.progress_cb = progress_cb;
+	opts.progress_payload = (void*) &progressCb;
+	opts.paths = {};
+	opts.baseline = baseline.ok() ? baseline.data() : nullptr;
+	opts.target_directory = targetDirectory.c_str();
+
+	// git_checkout_opts opts = {
+	// 	GIT_CHECKOUT_OPTS_VERSION,
+	// 	strategy,
+	// 	disableFilters ? 1 :  0,
+	// 	dirMode,
+	// 	fileMode,
+	// 	fileOpenFlags,
+	// 	notifyFlags,
+	// 	notify_cb,
+	// 	(void*)&notifyCb,
+	// 	progress_cb,
+	// 	(void*)&progressCb,
+	// 	{},
+	// 	baseline.ok() ? baseline.data() : nullptr,
+	// 	targetDirectory.c_str()
+	// };
 	helper::StrArrayFiller<std::vector<std::string>> filler(&opts.paths, paths);
-	
+
 	Exception::git2_assert(git_checkout_tree(data(), (git_object*)treeish.data(), &opts));
 }
 
 OId Repository::stashSave(Signature stasher, const std::string& message, unsigned int flags)
 {
 	git_oid out;
-	
+
 	int res = git_stash_save(&out, data(), const_cast<git_signature*>(stasher.data()), message.empty()?NULL:message.data(), flags);
 	if(res==GIT_OK)
 	{
@@ -1099,7 +1157,7 @@ bool Repository::stashForeach(StashCallbackFunction callback)
 		else
 			return GIT_OK;
 	};
-	
+
 	int res = git_stash_foreach(data(), foreach_cb, &callback);
 	if(res==GIT_OK)
 	{
@@ -1118,6 +1176,59 @@ bool Repository::stashForeach(StashCallbackFunction callback)
 void Repository::stashDrop(size_t index)
 {
 	Exception::git2_assert(git_stash_drop(data(), index));
+}
+
+RefLog Repository::readRefLog(const std::string& name)
+{
+	git_reflog *reflog;
+	Exception::git2_assert(git_reflog_read(&reflog, data(), name.c_str()));
+	return RefLog(reflog);
+}
+
+void Repository::renameRefLog(const std::string& oldName, const std::string& newName)
+{
+	Exception::git2_assert(git_reflog_rename(data(), oldName.c_str(), newName.c_str()));
+}
+
+void Repository::deleteRefLog(const std::string& name)
+{
+	Exception::git2_assert(git_reflog_delete(data(), name.c_str()));
+}
+
+void Repository::setUrl(const std::string& remote, const std::string& url)
+{
+	Exception::git2_assert(git_remote_set_url(data(), remote.c_str(), url.c_str()));
+}
+
+void Repository::setPushUrl(const std::string& remote, const std::string& url)
+{
+	Exception::git2_assert(git_remote_set_pushurl(data(), remote.c_str(), url.c_str()));
+}
+
+void Repository::addFetch(const std::string& remote, const std::string& refspec)
+{
+	Exception::git2_assert(git_remote_add_fetch(data(), remote.c_str(), refspec.c_str()));
+}
+
+void Repository::addPush(const std::string& remote, const std::string& refspec)
+{
+	Exception::git2_assert(git_remote_add_push(data(), remote.c_str(), refspec.c_str()));
+}
+
+void Repository::setAutotags(const std::string& remote, git_remote_autotag_option_t value)
+{
+	git_remote_set_autotag(data(), remote.c_str(), value);
+}
+
+void Repository::rename(std::vector<std::string>& problems, const std::string& oldName,
+						const std::string& newName)
+{
+	git_strarray problem_array;
+	problems.clear();
+	int res = git_remote_rename(&problem_array, data(), oldName.c_str(), newName.c_str());
+	helper::push_back(problems, &problem_array);
+	git_strarray_free(&problem_array);
+	Exception::git2_assert(res);
 }
 
 } // namespace git2
