@@ -1,3 +1,11 @@
+# Cmake intermediate files
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
 # Autotools intermediate files
 aclocal.m4
 autom4te.cache/
